@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:clickable="true"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/transparentBlack"
+        android:id = "@+id/clickableContainer"
+        android:clickable="true">
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:clickable="true"
+        android:layout_marginTop="70dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/colorBackground"
+        android:padding="12dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="@string/write_word"
+            android:background="@color/colorPrimary"
+            android:textColor="@color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:padding="5dp"
+            android:layout_marginBottom="10dp"
+            android:id="@+id/title" />
+
+        <AutoCompleteTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:hint="@string/eng_word"
+            android:completionThreshold="2"
+            android:background="@color/white"
+            android:paddingLeft="6dp"
+            android:layout_marginBottom="10dp"
+            android:ems="10"
+            android:id="@+id/engWord" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:background="@color/white"
+            android:hint="@string/rus_word"
+            android:paddingLeft="6dp"
+            android:layout_marginBottom="10dp"
+            android:ems="10"
+            android:id="@+id/rusWord" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                android:text="@string/accept"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/acceptButton"
+                style="@style/ButtonStyle"
+                android:layout_marginRight="10dp"
+                android:background="@drawable/button"
+                android:layout_weight="1" />
+
+            <Button
+                android:text="@string/decline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/declineButton"
+                style="@style/ButtonStyle"
+                android:background="@drawable/button"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

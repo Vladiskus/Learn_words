@@ -1,0 +1,115 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/clickableContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:foreground="@color/transparentBlack"
+        android:clickable="true">
+
+    </FrameLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:layout_gravity="center"
+        android:background="@color/colorBackground"
+        android:orientation="vertical"
+        tools:context="com.example.first.learnenglishwordssmart.fragments.VocabularyFragment">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp"
+            android:gravity="center"
+            android:text="@string/choose_level"
+            android:textColor="@color/black"
+            android:textSize="23sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/beginner"
+            style="@style/ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/button"
+            android:text="@string/beginner"
+            android:onClick="setVocabulary"
+            android:textSize="16sp" />
+
+
+        <Button
+            android:id="@+id/elementary"
+            style="@style/ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/button"
+            android:text="@string/elementary"
+            android:onClick="setVocabulary"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/pre_intermediate"
+            style="@style/ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/button"
+            android:text="@string/pre_intermediate"
+            android:onClick="setVocabulary"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/intermediate"
+            style="@style/ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/button"
+            android:text="@string/intermediate"
+            android:onClick="setVocabulary"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/upper_intermediate"
+            style="@style/ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/button"
+            android:text="@string/upper_intermediate"
+            android:onClick="setVocabulary"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/advanced"
+            style="@style/ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/button"
+            android:text="@string/advanced"
+            android:onClick="setVocabulary"
+            android:textSize="16sp" />
+
+
+        <Button
+            android:id="@+id/proficient"
+            style="@style/ButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:background="@drawable/button"
+            android:text="@string/proficient"
+            android:onClick="setVocabulary"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+</FrameLayout>
