@@ -2,7 +2,6 @@ package com.example.first.learnenglishwordssmart.activities;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,9 +13,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.first.learnenglishwordssmart.R;
+import com.example.first.learnenglishwordssmart.classes.SoundHelper;
 import com.example.first.learnenglishwordssmart.classes.Word;
 import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
+import com.example.first.learnenglishwordssmart.services.DownloadDBService;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -25,10 +27,15 @@ import java.util.GregorianCalendar;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String DB_URL = "https://dl.dropboxusercontent.com/s/byku51pln471yhj/" +
+            "words_database.db?dl=0";
+
     ArrayList<Word> words1;
     ArrayList<Word> words2;
     ArrayList<Word> words3;
-    Context mContext;
+    SoundHelper soundHelper;
+
+    boolean isDownloaded;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,14 +43,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
-        mContext = this;
+        soundHelper = new SoundHelper(this);
         //DataBaseFiller.FillWordsDataBase(mContext);
         //addWords();
+        isDownloaded = new File(getFilesDir().getAbsolutePath() + "/databases/" +
+                WordsDataBase.DATABASE_NAME).exists();
+        if (!isDownloaded) {
+            DownloadDBService.startDownload(this, DB_URL);
+            findViewById(R.id.download_layout).setVisibility(View.VISIBLE);
+            ((ProgressBar) findViewById(R.id.progressBar2)).setMax(100);
+            ((TextView) findViewById(R.id.downloading)).setText(getString(R.string.downloading, 0));
+        }
         final Intent intent = new Intent();
         findViewById(R.id.toGame).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                intent.setClass(mContext, WordsActivity.class);
+                intent.setClass(MainActivity.this, WordsActivity.class);
                 intent.putExtra("prime_type", 0);
                 startActivity(intent);
             }
@@ -53,11 +68,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Log.e("last position", String.valueOf(words1.get(words1.size() - 1).getRank()));
                 Log.e("current position", String.valueOf(MainActivity
-                        .getPreference(mContext, R.string.current_position, 1)));
-                    intent.putExtra("prime_type", 1);
-                    intent.putExtra("words", words1);
-                    intent.setClass(mContext, SelectionActivity.class);
-                    startActivity(intent);
+                        .getPreference(MainActivity.this, R.string.current_position, 1)));
+                intent.putExtra("prime_type", 1);
+                intent.putExtra("words", words1);
+                intent.setClass(MainActivity.this, SelectionActivity.class);
+                startActivity(intent);
             }
         });
         findViewById(R.id.smallRepetition).setOnClickListener(new View.OnClickListener() {
@@ -65,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 intent.putExtra("prime_type", 2);
                 intent.putExtra("words", words2);
-                intent.setClass(mContext, CardsActivity.class);
+                intent.setClass(MainActivity.this, CardsActivity.class);
                 startActivity(intent);
             }
         });
@@ -74,18 +89,22 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 intent.putExtra("prime_type", 3);
                 intent.putExtra("words", words3);
-                intent.setClass(mContext, CardsActivity.class);
+                intent.setClass(MainActivity.this, CardsActivity.class);
                 startActivity(intent);
             }
         });
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        words1 = WordsDataBase.getWords(mContext, 1, null);
-        words2 = WordsDataBase.getWords(mContext, 2, null);
-        words3 = WordsDataBase.getWords(mContext, 3, null);
+    protected void onStart() {
+        super.onStart();
+        if (isDownloaded) init();
+    }
+
+    public void init() {
+        words1 = WordsDataBase.getWords(MainActivity.this, 1, null);
+        words2 = WordsDataBase.getWords(MainActivity.this, 2, null);
+        words3 = WordsDataBase.getWords(MainActivity.this, 3, null);
         Calendar calStart = new GregorianCalendar();
         calStart.setTime(new Date());
         int hours = calStart.get(Calendar.HOUR_OF_DAY);
@@ -170,6 +189,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        soundHelper.shutdown();
+    }
+
     private void addWords() {
         ArrayList<String> myWords = new ArrayList<>();
         final String[] spellingArray = WordsDataBase.getSpellingArray(this, false);
@@ -211,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
         myWords.add("demise");
         for (String s : myWords) {
             WordsDataBase.addUserWord(this, s, null, true);
-            WordsDataBase.setOnLearning(this, s, new Date(System.currentTimeMillis() - 3*86400000));
+            WordsDataBase.setOnLearning(this, s, new Date(System.currentTimeMillis() - 3 * 86400000));
         }
         myWords.clear();
         myWords.add("derive");
@@ -221,7 +246,7 @@ public class MainActivity extends AppCompatActivity {
         myWords.add("poise");
         for (String s : myWords) {
             WordsDataBase.addUserWord(this, s, null, true);
-            WordsDataBase.setOnLearning(this, s, new Date(System.currentTimeMillis() - 2* 86400000));
+            WordsDataBase.setOnLearning(this, s, new Date(System.currentTimeMillis() - 2 * 86400000));
         }
         myWords.clear();
         myWords.add("vocation");
@@ -251,5 +276,11 @@ public class MainActivity extends AppCompatActivity {
             WordsDataBase.addUserWord(this, s, null, true);
             //WordsDataBase.setOnLearning(this, s, new Date(System.currentTimeMillis()));
         }
+        myWords.clear();
+        myWords.add("loathe");
+        myWords.add("deaf");
+        myWords.add("dumb");
+        myWords.add("limelight");
+        myWords.add("discern");
     }
 }

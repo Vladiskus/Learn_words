@@ -33,6 +33,7 @@ public class WritingFragment extends Fragment {
 
     TextView wordView;
     ImageButton speaker;
+    CardsActivity parentActivity;
     String spelling;
     int number;
     int difference;
@@ -53,7 +54,8 @@ public class WritingFragment extends Fragment {
         GridView gridView = (GridView) rootView.findViewById(R.id.gridView);
         wordView = (TextView) rootView.findViewById(R.id.word);
         position = getArguments().getInt("position");
-        ArrayList<Word> words = ((CardsActivity) getActivity()).words;
+        parentActivity = (CardsActivity) getActivity();
+        ArrayList<Word> words = parentActivity.words;
         int position = getArguments().getInt("position");
         spelling = words.get(position).getSpelling();
         AutofitHelper.create(wordView);
@@ -70,7 +72,7 @@ public class WritingFragment extends Fragment {
         speaker.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                new SoundHelper().spellIt(getActivity(), spelling, speaker, 2);
+                parentActivity.soundHelper.spellIt(parentActivity, spelling, speaker, 2);
             }
         });
         ((TextView) rootView.findViewById(R.id.translation)).setText(words.get(position).getTranslation());
@@ -94,7 +96,7 @@ public class WritingFragment extends Fragment {
 
             @Override
             public View getView(final int position, View convertView, ViewGroup parent) {
-                final Button button = new Button(getActivity());
+                final Button button = new Button(parentActivity);
                 button.setLayoutParams(new ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -107,13 +109,13 @@ public class WritingFragment extends Fragment {
                     public void onClick(View v) {
                         if (number < spelling.length()) {
                             if (array.get(position) == spelling.charAt(number)) {
-                                button.setBackgroundColor(getActivity().getResources().getColor(R.color.blue));
+                                button.setBackgroundColor(parentActivity.getResources().getColor(R.color.blue));
                                 number++;
                                 setWord();
                             } else {
                                 errors++;
-                                button.setBackgroundColor(getActivity().getResources().getColor(R.color.red));
-                                ((Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE)).vibrate(50);
+                                button.setBackgroundColor(parentActivity.getResources().getColor(R.color.red));
+                                ((Vibrator) parentActivity.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(50);
                             }
                             new ColorTask().execute((Button) button);
                         }
@@ -129,7 +131,7 @@ public class WritingFragment extends Fragment {
                     errors = errors + 2;
                     number++;
                     setWord();
-                    new ColorTask().execute(new Button(getActivity()));
+                    new ColorTask().execute(new Button(parentActivity));
                 }
             }
         });
@@ -149,17 +151,15 @@ public class WritingFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Button button) {
-            button.setBackgroundColor(getActivity().getResources().getColor(R.color.white));
+            button.setBackgroundColor(parentActivity.getResources().getColor(R.color.white));
             if (wordView.getText().charAt(wordView.getText().length() - 1) ==
                     spelling.charAt(spelling.length() - 1)) {
                 if (errors > (spelling.length() - difference) / 2)
                     CardsActivity.markList.set(position, 0);
-                if (((CardsActivity) getActivity()).primeType == 1)
-                    ((CardsActivity) getActivity()).mPager
-                            .setCurrentItem(position + 2 + MainActivity.getPreference(getActivity(),
-                                    R.string.number_of_words, 10), true);
-                else ((CardsActivity) getActivity()).mPager
-                        .setCurrentItem(position + 1, true);
+                if (parentActivity.primeType == 1)
+                    parentActivity.mPager.setCurrentItem(position + 2 + MainActivity
+                            .getPreference(parentActivity, R.string.number_of_words, 10), true);
+                else parentActivity.mPager.setCurrentItem(position + 1, true);
             }
         }
     }
@@ -225,7 +225,7 @@ public class WritingFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Void voids) {
-            new SoundHelper().spellIt(getActivity(), spelling, speaker, 2);
+            parentActivity.soundHelper.spellIt(parentActivity, spelling, speaker, 2);
         }
     }
 }

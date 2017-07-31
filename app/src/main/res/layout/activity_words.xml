@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.example.first.learnenglishwordssmart.activities.WordsActivity">
 
     <RelativeLayout
@@ -18,7 +19,7 @@
         android:layout_height="match_parent"
         android:id="@+id/main"
         tools:context="com.example.first.learnenglishwordssmart.activities.WordsActivity">
-
+<!--
         <TextView
             android:id="@+id/title"
             android:layout_width="match_parent"
@@ -29,14 +30,23 @@
             android:padding="10dp"
             android:text="@string/game_title0"
             android:textColor="@color/white"
-            android:textSize="21sp" />
+            android:textSize="21sp" />-->
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/my_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
         <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="12dp"
-            android:layout_below="@id/title"
+            android:layout_below="@id/my_toolbar"
             android:progress="0"
             android:progressDrawable="@drawable/custom_progress_bar" />
 

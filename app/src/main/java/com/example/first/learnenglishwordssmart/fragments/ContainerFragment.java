@@ -55,7 +55,7 @@ public class ContainerFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 flipCard(position, MainActivity.getPreference(getActivity(), R.string.en_ru, 1) == 0);
-                new SleepTask().execute(200, 600);
+                makeSound(200, 600);
                 turnOffButtons();
 
             }
@@ -65,7 +65,7 @@ public class ContainerFragment extends Fragment {
             public void onClick(View v) {
                 flipCard(position, MainActivity.getPreference(getActivity(), R.string.en_ru, 1) == 0);
                 CardsActivity.markList.set(position, 0);
-                new SleepTask().execute(200, 1600);
+                makeSound(200, 1600);
                 turnOffButtons();
             }
         });
@@ -121,7 +121,7 @@ public class ContainerFragment extends Fragment {
                     .replace(R.id.fragmentContainer, fragment).commit();
         }
         isShowingFront = !isShowingFront;
-        makeSound(600);
+        makeSound(500, 0);
     }
 
     private class SlideTask extends AsyncTask<Integer, Void, Void> {
@@ -154,8 +154,8 @@ public class ContainerFragment extends Fragment {
 
         @Override
         protected void onPostExecute(Integer mSec) {
-            if (getActivity() != null && fragment instanceof CardFrontFragment &&
-                    MainActivity.getPreference(getActivity(), R.string.audio, 1) == 1 && ((CardsActivity)
+            if (getActivity() != null && fragment instanceof CardFrontFragment && mSec == 0 &&
+                MainActivity.getPreference(getActivity(), R.string.audio, 1) == 1 && ((CardsActivity)
                     getActivity()).mPager.getCurrentItem() == position) ((CardFrontFragment) fragment).makeSound();
             if (type != 1 && mSec != 0) AsyncTaskCompat.executeParallel(new SlideTask(), mSec);
         }
@@ -186,7 +186,7 @@ public class ContainerFragment extends Fragment {
         }
     }
 
-    public void makeSound(int time) {
-        if (isShowingFront) new SleepTask().execute(time, 0);
+    public void makeSound(int time1, int time2) {
+        new SleepTask().execute(time1, time2);
     }
 }

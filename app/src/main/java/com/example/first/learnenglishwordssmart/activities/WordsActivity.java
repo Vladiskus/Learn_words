@@ -5,11 +5,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NavUtils;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.IntentCompat;
 import android.support.v4.os.AsyncTaskCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
@@ -34,7 +39,9 @@ public class WordsActivity extends AppCompatActivity {
     ArrayList<Integer> assessments = new ArrayList<>();
     ArrayList<Integer> primeRanks = new ArrayList<>();
     ArrayList<String> knownWords = new ArrayList<>();
-    AsyncTask<Void, Void, Void> currentTask;
+    ArrayList<ObjectAnimator> animators = new ArrayList<>();
+    ArrayList<FallingTask> fallingTasks = new ArrayList<>();
+    ArrayList<RemoveTask> removeTasks = new ArrayList<>();
     Context mContext;
     int vocabulary;
     int primeType;
@@ -46,28 +53,37 @@ public class WordsActivity extends AppCompatActivity {
     int backStepCount = 1;
     double requiredRatio;
     transient boolean isForbidden = false;
+    boolean isStopped = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_words);
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         ((ProgressBar) findViewById(R.id.progressBar)).setMax(10000);
         mContext = this;
         primeType = getIntent().getExtras().getInt("prime_type");
         mRelativeLayout = (RelativeLayout) findViewById(R.id.relative_layout);
         if (primeType == 0) {
-            isForbidden = true;
-            //findViewById(R.id.main).setVisibility(View.INVISIBLE);
-            fragment = new VocabularyFragment();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, fragment).commit();
-        }
+            getSupportActionBar().setTitle(R.string.game_title0);
+            if (savedInstanceState == null) {
+                isForbidden = true;
+                //findViewById(R.id.main).setVisibility(View.INVISIBLE);
+                fragment = new VocabularyFragment();
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragmentContainer, fragment).commit();
+            }
+        } else getSupportActionBar().setTitle(R.string.game_title1);
         new LoadTask().execute();
     }
 
     private void startFalling() {
         final Button view = new Button(this);
         int diameter = 100 * (int) getResources().getDisplayMetrics().density;
-        int marginLeft = (int) ((getResources().getDisplayMetrics().widthPixels - diameter) * Math.random());
+        int marginLeft = (int) ((getResources().getDisplayMetrics().widthPixels
+                - diameter) * Math.random());
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(diameter, diameter);
         params.setMargins(marginLeft, 0, 0, 0);
         mRelativeLayout.addView(view, params);
@@ -89,7 +105,9 @@ public class WordsActivity extends AppCompatActivity {
                 getResources().getDisplayMetrics().heightPixels);
         objectAnimator.setDuration(duration);
         objectAnimator.start();
-        AsyncTaskCompat.executeParallel(new RemoveTask(), view);
+        animators.add(objectAnimator);
+        removeTasks.add(new RemoveTask());
+        AsyncTaskCompat.executeParallel(removeTasks.get(removeTasks.size() - 1), view);
     }
 
     private class LoadTask extends AsyncTask<Void, Void, Void> {
@@ -106,9 +124,9 @@ public class WordsActivity extends AppCompatActivity {
         protected void onPostExecute(Void voids) {
             if (!isForbidden) {
                 startFalling();
-                AsyncTaskCompat.executeParallel(new FallingTask());
+                fallingTasks.add(new FallingTask());
+                AsyncTaskCompat.executeParallel(fallingTasks.get(fallingTasks.size() - 1));
             } else isForbidden = false;
-
         }
     }
 
@@ -125,7 +143,7 @@ public class WordsActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void voids) {
-            currentTask = new FallingTask();
+            fallingTasks.add(new FallingTask());
             try {
                 startFalling();
             } catch (IndexOutOfBoundsException e) {
@@ -145,17 +163,15 @@ public class WordsActivity extends AppCompatActivity {
                     assessments.clear();
                 }
                 if (realRatio > 0.5 || assessments.size() < length)
-                    AsyncTaskCompat.executeParallel(currentTask);
+                    AsyncTaskCompat.executeParallel(fallingTasks.get(fallingTasks.size() - 1));
                 else if (assessments.size() >= length) end();
             } else {
                 int sum = 0;
                 for (int i : assessments) {
                     if (i == 0) sum++;
                 }
-                Log.e("small amount", String.valueOf(sum));
-                Log.e("big amount", String.valueOf(8 * MainActivity.getPreference(mContext, R.string.number_of_words, 10)));
                 if (sum < 8 * MainActivity.getPreference(mContext, R.string.number_of_words, 10))
-                    AsyncTaskCompat.executeParallel(currentTask);
+                    AsyncTaskCompat.executeParallel(fallingTasks.get(fallingTasks.size() - 1));
                 else {
                     PreferenceManager.getDefaultSharedPreferences(mContext).edit()
                             .putInt(getString(R.string.current_position), MainActivity
@@ -206,8 +222,6 @@ public class WordsActivity extends AppCompatActivity {
                     ((assessments.size() > 40) ? 20000 * (1 - realRatio) : 2000 * assessments.size() / 40));
             else animation = ObjectAnimator.ofInt(progressBar, "progress", 10000 * sum2 / 8 /
                     MainActivity.getPreference(mContext, R.string.number_of_words, 10));
-            Log.e("progress", String.valueOf(10000 * sum2 / 8 /
-                    MainActivity.getPreference(mContext, R.string.number_of_words, 10)));
             animation.setDuration(700);
             animation.setInterpolator(new LinearInterpolator());
             animation.start();
@@ -216,6 +230,7 @@ public class WordsActivity extends AppCompatActivity {
             if (assessments.size() >= length && realRatio == requiredRatio)
                 primeRanks.add(count - (length / 2 + 3) * multiplier);
             mRelativeLayout.removeView(view);
+            animators.remove(0);
         }
     }
 
@@ -226,8 +241,6 @@ public class WordsActivity extends AppCompatActivity {
             rank = (primeRanks.get(0) + primeRanks.get(primeRanks.size() - 1)) / 2;
             WordsDataBase.setAreKnown(mContext, rank);
         } else rank = 1;
-        Log.e("rank", String.valueOf(rank));
-        Log.e("vocabulary", String.valueOf(vocabulary));
         PreferenceManager.getDefaultSharedPreferences(this).edit()
                 .putInt(getString(R.string.current_position), rank).apply();
         PreferenceManager.getDefaultSharedPreferences(this)
@@ -239,12 +252,6 @@ public class WordsActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setClass(mContext, MainActivity.class);
         startActivity(intent);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (currentTask != null) currentTask.cancel(true);
     }
 
     public void setVocabulary(View view) {
@@ -263,5 +270,78 @@ public class WordsActivity extends AppCompatActivity {
             startFalling();
             AsyncTaskCompat.executeParallel(new FallingTask());
         } else isForbidden = false;
+    }
+
+    private void pause() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+            for (ObjectAnimator objectAnimator : animators) {
+                objectAnimator.pause();
+            }
+            for (RemoveTask removeTask : removeTasks) {
+                removeTask.cancel(true);
+            }
+            removeTasks.clear();
+        }
+        for (FallingTask fallingTask : fallingTasks) {
+            fallingTask.cancel(true);
+        }
+        fallingTasks.clear();
+        isStopped = !isStopped;
+    }
+
+    private void resume() {
+        for (ObjectAnimator objectAnimator : animators) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT)
+                objectAnimator.resume();
+            removeTasks.add(new RemoveTask());
+            AsyncTaskCompat.executeParallel(removeTasks.get(removeTasks.size() - 1),
+                    (View) objectAnimator.getTarget());
+        }
+        startFalling();
+        fallingTasks.add(new FallingTask());
+        AsyncTaskCompat.executeParallel(fallingTasks.get(fallingTasks.size() - 1));
+        isStopped = !isStopped;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!isForbidden) resume();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.stop_or_resume:
+                if (isStopped) {
+                    resume();
+                    item.setIcon(R.drawable.ic_pause_white_24dp);
+                } else {
+                    pause();
+                    item.setIcon(R.drawable.ic_play_white_24dp);
+                }
+                return true;
+            case android.R.id.home:
+                Intent upIntent = NavUtils.getParentActivityIntent(this);
+                if (NavUtils.shouldUpRecreateTask(this, upIntent)) {
+                    TaskStackBuilder.create(this).addNextIntentWithParentStack(upIntent).startActivities();
+                } else {
+                    NavUtils.navigateUpTo(this, upIntent);
+                }
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.words_menu, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 }

@@ -80,13 +80,13 @@ public class AddWordFragment extends Fragment {
         super.onStart();
     }
 
-    private void cancel() {
+    public void cancel() {
         View focusView = getActivity().getCurrentFocus();
         if (focusView != null) {
             InputMethodManager imm = (InputMethodManager) getActivity()
                     .getSystemService(getActivity().INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(focusView.getWindowToken(), 0);
         }
-        getFragmentManager().popBackStack();
+        getActivity().getFragmentManager().popBackStack();
     }
 }

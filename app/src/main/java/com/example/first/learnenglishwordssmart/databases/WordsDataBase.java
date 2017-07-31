@@ -9,87 +9,54 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.preference.PreferenceManager;
-import android.provider.BaseColumns;
 
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.activities.MainActivity;
 import com.example.first.learnenglishwordssmart.classes.Word;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
-public class WordsDataBase extends SQLiteAssetHelper implements BaseColumns {
+public class WordsDataBase {
 
     private static WordsDataBase mInstance;
     private static SQLiteDatabase myWritableDb;
-    private static final String DATABASE_NAME = "words_database.db";
+    public static final String DATABASE_NAME = "words_database.db";
 
-    private static final int DATABASE_VERSION = 1;
     private static final String TABLE_NAME = "words_table";
 
-    public static final String WORD_RANK = "rank";
-    public static final String WORD_SPELLING = "spelling";
-    public static final String WORD_TRANSLATION = "translation";
-    public static final String WORD_DEFINITIONS = "definitions";
-    public static final String WORD_SAMPLES = "samples";
-    public static final String WORD_IS_KNOWN = "isKnown";
-    public static final String WORD_DATE = "date";
+    private static final String WORD_RANK = "rank";
+    private static final String WORD_SPELLING = "spelling";
+    private static final String WORD_TRANSLATION = "translation";
+    private static final String WORD_DEFINITIONS = "definitions";
+    private static final String WORD_SAMPLES = "samples";
+    private static final String WORD_IS_KNOWN = "isKnown";
+    private static final String WORD_DATE = "date";
 
-    /*private static final String SQL_CREATE_ENTRIES = "CREATE TABLE "
-            + TABLE_NAME + " ("
-            + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-            + WORD_RANK + " INTEGER, "
-            + WORD_IS_KNOWN + " INTEGER, "
-            + WORD_SPELLING + " TEXT, "
-            + WORD_TRANSLATION + " TEXT, "
-            + WORD_DEFINITIONS + " TEXT, "
-            + WORD_SAMPLES + " TEXT, "
-            + WORD_DATE + " TEXT);";
-
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-        db.execSQL(SQL_CREATE_ENTRIES);
-    }*/
-
-    private WordsDataBase(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-    }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i2) {
-        onCreate(sqLiteDatabase);
-    }
-
-    @Override
-    public void close() {
-        super.close();
-        if (myWritableDb != null) {
-            myWritableDb.close();
-            myWritableDb = null;
-        }
-    }
-
-    private SQLiteDatabase getMyWritableDatabase() {
+    private SQLiteDatabase getMyWritableDatabase(Context context) {
         if ((myWritableDb == null) || (!myWritableDb.isOpen())) {
-            myWritableDb = this.getWritableDatabase();
+            myWritableDb = SQLiteDatabase.openDatabase(context.getFilesDir().getAbsolutePath() +
+                    "/databases/" + DATABASE_NAME, null, SQLiteDatabase.OPEN_READWRITE);
         }
         return myWritableDb;
     }
 
-    private static WordsDataBase getInstance(Context context) {
+    private static WordsDataBase getInstance() {
         if (mInstance == null) {
-            mInstance = new WordsDataBase(context);
+            mInstance = new WordsDataBase();
         }
         return mInstance;
     }
 
+    private WordsDataBase() {}
+
     public static void createVoidDataBase(Context context) {
-        SQLiteDatabase sqdb = WordsDataBase.getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = WordsDataBase.getInstance().getMyWritableDatabase(context);
         for (int i = 0; i < MainActivity.getPreference(context, R.string.last_rank, 12522); i++) {
             ContentValues cv = new ContentValues();
             cv.put(WORD_SPELLING, "");
@@ -98,7 +65,7 @@ public class WordsDataBase extends SQLiteAssetHelper implements BaseColumns {
     }
 
     public static void addWordToDataBase(Word word, Context context) {
-        SQLiteDatabase sqdb = WordsDataBase.getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = WordsDataBase.getInstance().getMyWritableDatabase(context);
         ContentValues cv = new ContentValues();
         cv.put(WORD_SPELLING, word.getSpelling());
         cv.put(WORD_TRANSLATION, word.getTranslation());
@@ -108,7 +75,7 @@ public class WordsDataBase extends SQLiteAssetHelper implements BaseColumns {
         cv.put(WORD_IS_KNOWN, word.isKnown() ? 1 : 0);
         cv.put(WORD_DATE, new SimpleDateFormat("dd MMM yy HH:mm:ss z", Locale.US).format(word.getDate()).toUpperCase());
         if (word.getRank() <= MainActivity.getPreference(context, R.string.last_rank, 12522))
-            sqdb.update(TABLE_NAME, cv, _ID + " =?", new String[]{String.valueOf(word.getRank())});
+            sqdb.update(TABLE_NAME, cv, "_id" + " =?", new String[]{String.valueOf(word.getRank())});
         else {
             PreferenceManager.getDefaultSharedPreferences(context).edit()
                     .putInt(context.getString(R.string.last_rank), MainActivity
@@ -118,7 +85,7 @@ public class WordsDataBase extends SQLiteAssetHelper implements BaseColumns {
     }
 
     public static Word getWordFromDataBase(Context context, String spelling) {
-        SQLiteDatabase sqdb = getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = getInstance().getMyWritableDatabase(context);
         return cursorToList(sqdb.query(TABLE_NAME, null, WORD_SPELLING + " =?",
                 new String[]{spelling}, null, null, null, null)).get(0);
     }
@@ -146,7 +113,7 @@ public class WordsDataBase extends SQLiteAssetHelper implements BaseColumns {
     }
 
     public static ArrayList<Word> getWords(Context context, int primeType, String amount) {
-        SQLiteDatabase sqdb = getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = getInstance().getMyWritableDatabase(context);
         Cursor mCursor;
         ArrayList<String> rankList = new ArrayList<>();
         if (primeType == 0) return cursorToList(sqdb.query(TABLE_NAME, null, WORD_IS_KNOWN + " =?",
@@ -197,7 +164,7 @@ public class WordsDataBase extends SQLiteAssetHelper implements BaseColumns {
     }
 
     public static void success(Context context, int rank, Date date) {
-        SQLiteDatabase sqdb = WordsDataBase.getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = WordsDataBase.getInstance().getMyWritableDatabase(context);
         long dayStart = PreferenceManager.getDefaultSharedPreferences(context)
                 .getLong(context.getString(R.string.last_day_start), 0);
         long time = date.getTime() + 86400000 * 14;
@@ -221,7 +188,7 @@ public class WordsDataBase extends SQLiteAssetHelper implements BaseColumns {
     }
 
     public static void fail(Context context, int rank, Date date) {
-        SQLiteDatabase sqdb = WordsDataBase.getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = WordsDataBase.getInstance().getMyWritableDatabase(context);
         long dayStart = PreferenceManager.getDefaultSharedPreferences(context)
                 .getLong(context.getString(R.string.last_day_start), 0);
         int[] a = new int[]{1, 3, 7, 14, 30, 60};
@@ -240,21 +207,21 @@ public class WordsDataBase extends SQLiteAssetHelper implements BaseColumns {
     }
 
     public static void setIsKnown(Context context, String spelling) {
-        SQLiteDatabase sqdb = WordsDataBase.getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = WordsDataBase.getInstance().getMyWritableDatabase(context);
         ContentValues cv = new ContentValues();
         cv.put(WORD_IS_KNOWN, 1);
         sqdb.update(TABLE_NAME, cv, WORD_SPELLING + " =?", new String[]{spelling});
     }
 
     public static void setAreKnown(Context context, int position) {
-        SQLiteDatabase sqdb = WordsDataBase.getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = WordsDataBase.getInstance().getMyWritableDatabase(context);
         ContentValues cv = new ContentValues();
         cv.put(WORD_IS_KNOWN, 1);
         sqdb.update(TABLE_NAME, cv, WORD_RANK + " <?", new String[]{String.valueOf(position)});
     }
 
     public static void setOnLearning(Context context, String spelling, Date date) {
-        SQLiteDatabase sqdb = WordsDataBase.getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = WordsDataBase.getInstance().getMyWritableDatabase(context);
         PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(
                 context.getString(R.string.on_learning), MainActivity
                         .getPreference(context, R.string.on_learning, 0) + 1).apply();
@@ -265,7 +232,7 @@ public class WordsDataBase extends SQLiteAssetHelper implements BaseColumns {
     }
 
     public static String[] getSpellingArray(Context context, boolean all) {
-        SQLiteDatabase sqdb = getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = getInstance().getMyWritableDatabase(context);
         ArrayList<Word> words = getWords(context, 1, null);
         ArrayList<String> list = new ArrayList<>();
         for (Word word : words) {
@@ -282,7 +249,7 @@ public class WordsDataBase extends SQLiteAssetHelper implements BaseColumns {
     }
 
     public static void addUserWord(Context context, String spelling, String translation, boolean isContains) {
-        SQLiteDatabase sqdb = getInstance(context).getMyWritableDatabase();
+        SQLiteDatabase sqdb = getInstance().getMyWritableDatabase(context);
         ContentValues cv = new ContentValues();
         cv.put(WORD_SPELLING, spelling);
         if (translation != null) cv.put(WORD_TRANSLATION, translation);

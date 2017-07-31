@@ -1,5 +1,6 @@
 package com.example.first.learnenglishwordssmart.fragments;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -21,19 +22,21 @@ public class CardFrontFragment extends Fragment {
 
     String spelling;
     ImageButton speaker;
+    CardsActivity parentActivity;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_card_front, container, false);
-        ArrayList<Word> words = ((CardsActivity) getActivity()).words;
+        parentActivity = ((CardsActivity) getActivity());
+        ArrayList<Word> words = parentActivity.words;
         int position = getArguments().getInt("position");
         speaker = (ImageButton) rootView.findViewById(R.id.imageSpeakerBig);
         spelling = words.get(position).getSpelling();
         speaker.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                new SoundHelper().spellIt(getActivity(), spelling, speaker, 1);
+                parentActivity.soundHelper.spellIt(parentActivity, spelling, speaker, 1);
             }
         });
         TextView spellingView = (TextView) rootView.findViewById(R.id.spelling);
@@ -72,9 +75,6 @@ public class CardFrontFragment extends Fragment {
     }
 
     public void makeSound() {
-        try {
-            new SoundHelper().spellIt(getActivity(), spelling, speaker, 1);
-        } catch (Exception e) {
-        }
+        parentActivity.soundHelper.spellIt(parentActivity, spelling, speaker, 1);
     }
 }

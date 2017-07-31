@@ -6,7 +6,8 @@
     <string name="cards2">Повторение</string>
     <string name="cards3">Общее повторение</string>
     <string name="settings">Настройки</string>
-    <string name="falling_words">Общее повторение</string>
+    <string name="stop_or_resume">Остановиться или продолжить</string>
+    <string name="falling_words">Определение словарного запаса</string>
     <string name="level">Уровень %d</string>
     <string name="to_next_level">очков до следующего уровня %d</string>
     <string name="vocabulary">Словарный запас: %s</string>
@@ -33,7 +34,7 @@
     <string name="number_of_words_old">Слов на изучение было</string>
     <string name="click_unknown">Перехватите неизвестные слова</string>
     <string name="game_title0">Определение словарного запаса</string>
-    <string name="game_title1">Выяление новых слов</string>
+    <string name="game_title1">Отбор новых слов</string>
     <string name="day_start">Начало дня</string>
     <string name="current_position">Текущая позиция</string>
     <string name="last_rank">Число строк</string>
@@ -60,5 +61,6 @@
     <string name="audio">Авто-озвучивание</string>
     <string name="random">Случайный порядок</string>
     <string name="en_ru">Начинать с ангийского</string>
+    <string name="downloading">Загрузка базы данных, ждите... %d%%</string>
 
 </resources>

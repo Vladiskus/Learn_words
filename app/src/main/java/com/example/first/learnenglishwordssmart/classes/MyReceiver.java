@@ -18,15 +18,9 @@ import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
  */
 
 public class MyReceiver extends BroadcastReceiver {
-    public MyReceiver() {
-    }
 
     @Override
     public void onReceive(Context context, Intent arg) {
-        showNotification(context, arg);
-    }
-
-    private void showNotification(Context context, Intent arg) {
         int primeType = arg.getExtras().getInt("prime_type");
         Intent intent = new Intent();
         intent.putExtra("prime_type", primeType);

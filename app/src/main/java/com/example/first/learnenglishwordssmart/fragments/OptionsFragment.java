@@ -49,8 +49,6 @@ public class OptionsFragment extends Fragment {
                 } else {
                     ((CardsActivity) getActivity()).words = getActivity().getIntent()
                             .getExtras().getParcelableArrayList("words");
-                    Log.e("first", getActivity().getIntent()
-                            .getExtras().getParcelableArrayList("words").get(0).toString());
                 }
                 ViewPager pager = ((CardsActivity) getActivity()).mPager;
                 int currentItem = pager.getCurrentItem();

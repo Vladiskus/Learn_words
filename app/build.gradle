@@ -27,7 +27,6 @@ configurations.compile {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile files('libs/animator.jar')
-    compile 'com.readystatesoftware.sqliteasset:sqliteassethelper:+'
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
     compile 'com.google.code.gson:gson:2.8.0'

@@ -25,6 +25,7 @@ import android.widget.ProgressBar;
 
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.classes.CustomViewPager;
+import com.example.first.learnenglishwordssmart.classes.SoundHelper;
 import com.example.first.learnenglishwordssmart.classes.Word;
 import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
 import com.example.first.learnenglishwordssmart.fragments.ChangeNumberFragment;
@@ -35,6 +36,7 @@ import com.example.first.learnenglishwordssmart.fragments.RewardFragment;
 import com.example.first.learnenglishwordssmart.fragments.WritingFragment;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class CardsActivity extends AppCompatActivity {
 
@@ -42,6 +44,7 @@ public class CardsActivity extends AppCompatActivity {
     public PagerAdapter mPagerAdapter;
     public ViewPager.OnPageChangeListener pageChangeListener;
     public ArrayList<Word> words;
+    public SoundHelper soundHelper;
     public int number;
     public int primeType;
     Context mContext;
@@ -67,6 +70,7 @@ public class CardsActivity extends AppCompatActivity {
                 getSupportActionBar().setTitle(R.string.cards3);
                 break;
         }
+        soundHelper = new SoundHelper(this);
         mPager = (CustomViewPager) findViewById(R.id.pager);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         progressBar.setMax(10000);
@@ -100,7 +104,7 @@ public class CardsActivity extends AppCompatActivity {
                 } else mPager.setPagingEnabled(false);
                 if (MainActivity.getPreference(mContext, R.string.audio, 1) == 1) {
                     if (fragment instanceof ContainerFragment)
-                        ((ContainerFragment) fragment).makeSound(200);
+                        ((ContainerFragment) fragment).makeSound(200, 0);
                     if (fragment instanceof WritingFragment)
                         ((WritingFragment) fragment).makeSound(200);
                 }
@@ -202,6 +206,12 @@ public class CardsActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        soundHelper.shutdown();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.cards_menu, menu);
         return super.onCreateOptionsMenu(menu);
@@ -211,15 +221,6 @@ public class CardsActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.settings:
-                /*if (MainActivity.getPreference(mContext, R.string.audio_default, 1) == 1) {
-                    PreferenceManager.getDefaultSharedPreferences(this).edit()
-                            .putInt(getString(R.string.audio_default), 0).apply();
-                    item.setIcon(drawableOff);
-                } else {
-                    PreferenceManager.getDefaultSharedPreferences(this).edit()
-                            .putInt(getString(R.string.audio_default), 1).apply();
-                    item.setIcon(drawableOn);
-                }*/
                 Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer2);
                 if (!(fragment instanceof OptionsFragment) || !fragment.isAdded())
                     getSupportFragmentManager().beginTransaction()
