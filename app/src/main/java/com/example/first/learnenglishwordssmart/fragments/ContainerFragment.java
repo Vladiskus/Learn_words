@@ -1,12 +1,9 @@
 package com.example.first.learnenglishwordssmart.fragments;
 
-
-import android.os.AsyncTask;
 import android.os.Bundle;
 
+import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.support.v4.os.AsyncTaskCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +12,6 @@ import android.widget.Button;
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.activities.CardsActivity;
 import com.example.first.learnenglishwordssmart.activities.MainActivity;
-import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
-
 
 public class ContainerFragment extends Fragment {
 
@@ -42,7 +37,8 @@ public class ContainerFragment extends Fragment {
             fragment = new CardFrontFragment();
             isShowingFront = true;
         }
-        if (savedInstanceState != null) isShowingFront = savedInstanceState.getBoolean("isShowingFront");
+        if (savedInstanceState != null)
+            isShowingFront = savedInstanceState.getBoolean("isShowingFront");
         Bundle args = new Bundle();
         knownButton = (Button) rootView.findViewById(R.id.knownButton);
         unknownButton = (Button) rootView.findViewById(R.id.unknownButton);
@@ -124,43 +120,6 @@ public class ContainerFragment extends Fragment {
         makeSound(500, 0);
     }
 
-    private class SlideTask extends AsyncTask<Integer, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Integer... mSec) {
-            try {
-                Thread.sleep(mSec[0]);
-            } catch (InterruptedException e) {
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void voids) {
-            ((CardsActivity) getActivity()).mPager.setCurrentItem(position + 1, true);
-        }
-    }
-
-    private class SleepTask extends AsyncTask<Integer, Void, Integer> {
-
-        @Override
-        protected Integer doInBackground(Integer... mSec) {
-            try {
-                Thread.sleep(mSec[0]);
-            } catch (InterruptedException e) {
-            }
-            return mSec[1];
-        }
-
-        @Override
-        protected void onPostExecute(Integer mSec) {
-            if (getActivity() != null && fragment instanceof CardFrontFragment && mSec == 0 &&
-                MainActivity.getPreference(getActivity(), R.string.audio, 1) == 1 && ((CardsActivity)
-                    getActivity()).mPager.getCurrentItem() == position) ((CardFrontFragment) fragment).makeSound();
-            if (type != 1 && mSec != 0) AsyncTaskCompat.executeParallel(new SlideTask(), mSec);
-        }
-    }
-
     private void turnOffButtons() {
         knownButton.setClickable(false);
         unknownButton.setClickable(false);
@@ -186,7 +145,25 @@ public class ContainerFragment extends Fragment {
         }
     }
 
-    public void makeSound(int time1, int time2) {
-        new SleepTask().execute(time1, time2);
+    public void makeSound(int time1, final int time2) {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (getActivity() != null && fragment instanceof CardFrontFragment && time2 == 0 &&
+                        MainActivity.getPreference(getActivity(), R.string.audio, 1) == 1 &&
+                        ((CardsActivity) getActivity()).mPager.getCurrentItem() == position)
+                    ((CardFrontFragment) fragment).makeSound();
+                if (type != 1 && time2 != 0) slide(time2);
+            }
+        }, time1);
+    }
+
+    private void slide(int time) {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ((CardsActivity) getActivity()).mPager.setCurrentItem(position + 1, true);
+            }
+        }, time);
     }
 }

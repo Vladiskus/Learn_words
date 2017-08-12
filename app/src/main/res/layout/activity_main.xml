@@ -8,14 +8,16 @@
     android:orientation="vertical"
     tools:context="com.example.first.learnenglishwordssmart.activities.MainActivity">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/my_toolbar"
+    <TextView
+        android:id="@+id/title"
+        android:text="@string/app_name"
+        android:textColor="@color/white"
+        android:gravity="center"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+        style="@style/Base.TextAppearance.AppCompat.Widget.ActionBar.Title"
+        android:elevation="4dp" />
 
     <FrameLayout
         android:layout_width="match_parent"

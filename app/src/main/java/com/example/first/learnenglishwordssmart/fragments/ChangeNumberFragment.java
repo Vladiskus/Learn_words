@@ -1,14 +1,11 @@
 package com.example.first.learnenglishwordssmart.fragments;
 
-import android.app.Fragment;
-import android.content.Context;
+import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -23,15 +20,15 @@ public class ChangeNumberFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_change_number, container, false);
         final TextView numberView = (TextView) rootView.findViewById(R.id.number);
-        numberView.setText(MainActivity.getNumberString(
-                ((SelectionActivity) getActivity()).number, getActivity()));
+        int number = MainActivity.getPreference(getActivity(), R.string.number_of_words, 10);
+        numberView.setText(getResources().getQuantityString(R.plurals.words, number, number));
         SeekBar seekBar = (SeekBar) rootView.findViewById(R.id.seekBar);
-        seekBar.setProgress(((SelectionActivity) getActivity()).number);
+        seekBar.setProgress(number);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 int number = progress + 1;
-                numberView.setText(MainActivity.getNumberString(number, getActivity()));
+                numberView.setText(getResources().getQuantityString(R.plurals.words, number, number));
             }
 
             @Override

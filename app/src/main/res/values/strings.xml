@@ -7,7 +7,7 @@
     <string name="cards3">Общее повторение</string>
     <string name="settings">Настройки</string>
     <string name="stop_or_resume">Остановиться или продолжить</string>
-    <string name="falling_words">Определение словарного запаса</string>
+    <string name="falling_words">Поймай слова</string>
     <string name="level">Уровень %d</string>
     <string name="to_next_level">очков до следующего уровня %d</string>
     <string name="vocabulary">Словарный запас: %s</string>
@@ -27,13 +27,11 @@
     <string name="decline">Отмена</string>
     <string name="known">Помню</string>
     <string name="unknown">Не помню</string>
-    <string name="word">%d слово</string>
-    <string name="words">%d слова</string>
-    <string name="wordss">%d слов</string>
     <string name="number_of_words">Слов на изучение</string>
     <string name="number_of_words_old">Слов на изучение было</string>
     <string name="click_unknown">Перехватите неизвестные слова</string>
-    <string name="game_title0">Определение словарного запаса</string>
+    <string name="unknown_full">Перехватите неизвестные слова. Не дайте им достичь конца экрана.</string>
+    <string name="game_title0">Поймай слова</string>
     <string name="game_title1">Отбор новых слов</string>
     <string name="day_start">Начало дня</string>
     <string name="current_position">Текущая позиция</string>
@@ -61,6 +59,13 @@
     <string name="audio">Авто-озвучивание</string>
     <string name="random">Случайный порядок</string>
     <string name="en_ru">Начинать с ангийского</string>
+    <string name="speed">Скорость</string>
     <string name="downloading">Загрузка базы данных, ждите... %d%%</string>
 
+    <string-array name="multipliers">
+        <item>×1.2</item>
+        <item>×1.0</item>
+        <item>×0.8</item>
+        <item>×0.6</item>
+    </string-array>
 </resources>

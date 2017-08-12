@@ -2,11 +2,12 @@ package com.example.first.learnenglishwordssmart.activities;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -15,71 +16,76 @@ import android.widget.TextView;
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.classes.SoundHelper;
 import com.example.first.learnenglishwordssmart.classes.Word;
-import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
+import com.example.first.learnenglishwordssmart.providers.WordsHelper;
+import com.example.first.learnenglishwordssmart.providers.WordsProvider;
 import com.example.first.learnenglishwordssmart.services.DownloadDBService;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String DB_URL = "https://dl.dropboxusercontent.com/s/byku51pln471yhj/" +
+    private static final String DB_URL = "https://dl.dropboxusercontent.com/s/qsgbqcbkfaih1y7/" +
             "words_database.db?dl=0";
 
-    ArrayList<Word> words1;
-    ArrayList<Word> words2;
-    ArrayList<Word> words3;
-    SoundHelper soundHelper;
+    public static final String EXTRA_PRIME_TYPE = "prime_type";
+    public static final String EXTRA_WORDS = "words";
+    public static final String GAME = "game";
+    public static final String LEARN_NEW = "learnNew";
+    public static final String SMALL_REPETITION = "small_repetition";
+    public static final String BIG_REPETITION = "big_repetition";
 
-    boolean isDownloaded;
+    private ArrayList<Word> words1;
+    private ArrayList<Word> words2;
+    private ArrayList<Word> words3;
+    private SoundHelper soundHelper;
+    private boolean isDownloaded;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
-        setSupportActionBar(myToolbar);
         soundHelper = new SoundHelper(this);
-        //DataBaseFiller.FillWordsDataBase(mContext);
-        //addWords();
+        //DataBaseFiller.FillWordsDataBase(MainActivity.this);
         isDownloaded = new File(getFilesDir().getAbsolutePath() + "/databases/" +
-                WordsDataBase.DATABASE_NAME).exists();
+                WordsProvider.DATABASE_NAME).exists();
         if (!isDownloaded) {
-            DownloadDBService.startDownload(this, DB_URL);
             findViewById(R.id.download_layout).setVisibility(View.VISIBLE);
             ((ProgressBar) findViewById(R.id.progressBar2)).setMax(100);
             ((TextView) findViewById(R.id.downloading)).setText(getString(R.string.downloading, 0));
+            DownloadDBService.startDownload(this, DB_URL);
         }
         final Intent intent = new Intent();
         findViewById(R.id.toGame).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 intent.setClass(MainActivity.this, WordsActivity.class);
-                intent.putExtra("prime_type", 0);
+                intent.putExtra(EXTRA_PRIME_TYPE, GAME);
                 startActivity(intent);
             }
         });
         findViewById(R.id.learnNew).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e("last position", String.valueOf(words1.get(words1.size() - 1).getRank()));
-                Log.e("current position", String.valueOf(MainActivity
-                        .getPreference(MainActivity.this, R.string.current_position, 1)));
-                intent.putExtra("prime_type", 1);
-                intent.putExtra("words", words1);
-                intent.setClass(MainActivity.this, SelectionActivity.class);
+                if (words1.get(0).getRank() < getPreference(MainActivity.this, R.string.current_position, 0)) {
+                    intent.putExtra(EXTRA_WORDS, words1);
+                    intent.setClass(MainActivity.this, SelectionActivity.class);
+                } else {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                    intent.setClass(MainActivity.this, WordsActivity.class);
+                }
+                intent.putExtra(EXTRA_PRIME_TYPE, LEARN_NEW);
                 startActivity(intent);
             }
         });
         findViewById(R.id.smallRepetition).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                intent.putExtra("prime_type", 2);
-                intent.putExtra("words", words2);
+                intent.putExtra(EXTRA_PRIME_TYPE, SMALL_REPETITION);
+                intent.putExtra(EXTRA_WORDS, words2);
                 intent.setClass(MainActivity.this, CardsActivity.class);
                 startActivity(intent);
             }
@@ -87,8 +93,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.bigRepetition).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                intent.putExtra("prime_type", 3);
-                intent.putExtra("words", words3);
+                intent.putExtra(EXTRA_PRIME_TYPE, BIG_REPETITION);
+                intent.putExtra(EXTRA_WORDS, words3);
                 intent.setClass(MainActivity.this, CardsActivity.class);
                 startActivity(intent);
             }
@@ -96,15 +102,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
         if (isDownloaded) init();
     }
 
     public void init() {
-        words1 = WordsDataBase.getWords(MainActivity.this, 1, null);
-        words2 = WordsDataBase.getWords(MainActivity.this, 2, null);
-        words3 = WordsDataBase.getWords(MainActivity.this, 3, null);
+        words1 = WordsHelper.getWords(MainActivity.this, LEARN_NEW, null);
+        words2 = WordsHelper.getWords(MainActivity.this, SMALL_REPETITION, null);
+        words3 = WordsHelper.getWords(MainActivity.this, BIG_REPETITION, null);
         Calendar calStart = new GregorianCalendar();
         calStart.setTime(new Date());
         int hours = calStart.get(Calendar.HOUR_OF_DAY);
@@ -116,49 +122,46 @@ public class MainActivity extends AppCompatActivity {
         if (hours >= getPreference(this, R.string.day_start, 2))
             dayStart = calStart.getTime();
         else dayStart = new Date(calStart.getTimeInMillis() - 86400000);
-        if (dayStart.getTime() > PreferenceManager.getDefaultSharedPreferences(this)
-                .getLong(this.getString(R.string.last_day_start), 0)) {
-            PreferenceManager.getDefaultSharedPreferences(this).edit()
-                    .putLong(getString(R.string.last_day_start), dayStart.getTime()).apply();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if (dayStart.getTime() > sharedPreferences.getLong(this.getString(R.string.last_day_start), 0)) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putLong(getString(R.string.last_day_start), dayStart.getTime());
+            editor.putInt(getString(R.string.small_repetition), 0);
+            editor.putInt(getString(R.string.big_repetition), 0);
+            editor.putInt(getString(R.string.learn_new), 0);
+            editor.apply();
             turnOnButton(findViewById(R.id.smallRepetition));
             turnOnButton(findViewById(R.id.bigRepetition));
             turnOnButton(findViewById(R.id.learnNew));
-            PreferenceManager.getDefaultSharedPreferences(this).edit()
-                    .putInt(getString(R.string.small_repetition), 0).apply();
-            PreferenceManager.getDefaultSharedPreferences(this).edit()
-                    .putInt(getString(R.string.big_repetition), 0).apply();
-            PreferenceManager.getDefaultSharedPreferences(this).edit()
-                    .putInt(getString(R.string.learn_new), 0).apply();
         }
         setStats();
+        if (getPreference(this, R.string.vocabulary, 0) == 0)
+            turnOffButton(findViewById(R.id.learnNew));
+        else turnOnButton(findViewById(R.id.learnNew));
         if (getPreference(this, R.string.learn_new, 0) == 1)
             turnOffButton(findViewById(R.id.learnNew));
         if (getPreference(this, R.string.small_repetition, 0) == 4 || words2.size() == 0)
             turnOffButton(findViewById(R.id.smallRepetition));
         if (getPreference(this, R.string.big_repetition, 0) == 1 || words3.size() == 0)
             turnOffButton(findViewById(R.id.bigRepetition));
-        else
-            ((Button) findViewById(R.id.bigRepetition)).setText(String.format(getString(R.string.big_repetition),
-                    getNumberString(words3.size(), this)));
+        else ((Button) findViewById(R.id.bigRepetition))
+                .setText(String.format(getString(R.string.big_repetition), getResources().getQuantityString(R.plurals.words, words3.size(), words3.size())));
     }
 
     private void setStats() {
-        /*PreferenceManager.getDefaultSharedPreferences(this).edit()
-                .putInt(getString(R.string.current_position), 4000).apply();
-        WordsDataBase.setAreKnown(this, 4000);*/
-        //PreferenceManager.getDefaultSharedPreferences(this).edit().putInt(getString(R.string.number_of_words), 10).apply();
         int level = getPreference(this, R.string.level, 0);
         ((TextView) findViewById(R.id.level)).setText(String.format(getString(R.string.level), level));
         ((TextView) findViewById(R.id.toNextLevel)).setText(String.format(getString(R.string.to_next_level),
                 toNextLevel(level + 1) - getPreference(this, R.string.to_next_level, 0)));
+        int number = getPreference(this, R.string.vocabulary, 0);
         ((TextView) findViewById(R.id.vocabulary)).setText(String.format(getString(R.string.vocabulary),
-                getNumberString(getPreference(this, R.string.vocabulary, 0), this)));
+                getResources().getQuantityString(R.plurals.words, number, number)));
         ((TextView) findViewById(R.id.learned)).setText(String.format(getString(R.string.learned),
                 getPreference(this, R.string.learned, 0)));
         ((TextView) findViewById(R.id.onLearning)).setText(String.format(getString(R.string.on_learning),
                 getPreference(this, R.string.on_learning, 0)));
         ((Button) findViewById(R.id.bigRepetition)).setText(String.format(getString(R.string.big_repetition),
-                getNumberString(0, this)));
+                getResources().getQuantityString(R.plurals.words, 0, 0)));
         ((ProgressBar) findViewById(R.id.progressBar))
                 .setProgress(getPreference(this, R.string.to_next_level, 0) * 100 / toNextLevel(level + 1));
     }
@@ -167,14 +170,9 @@ public class MainActivity extends AppCompatActivity {
         return (int) (0.25 * nextLevel * nextLevel + 10 * nextLevel + 139.75) / 10 * 10;
     }
 
-    public static String getNumberString(int i, Context context) {
-        if (i == 1) return String.format(context.getString(R.string.word), i);
-        if (i > 1 && i < 5) return String.format(context.getString(R.string.words), i);
-        else return String.format(context.getString(R.string.wordss), i);
-    }
-
     public static int getPreference(Context context, int path, int def) {
-        return PreferenceManager.getDefaultSharedPreferences(context).getInt(context.getString(path), def);
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getInt(context.getString(path), def);
     }
 
     private void turnOffButton(View view) {
@@ -193,94 +191,5 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         soundHelper.shutdown();
-    }
-
-    private void addWords() {
-        ArrayList<String> myWords = new ArrayList<>();
-        final String[] spellingArray = WordsDataBase.getSpellingArray(this, false);
-        myWords.add("savour");
-        myWords.add("redemption");
-        myWords.add("cripple");
-        myWords.add("abyss");
-        myWords.add("haunt");
-        myWords.add("compel");
-        myWords.add("strap");
-        myWords.add("subliminal");
-        WordsDataBase.addUserWord(this, "play around", "манипулировать",
-                new ArrayList<>(Arrays.asList(spellingArray)).contains("play around"));
-        WordsDataBase.addUserWord(this, "high-rise", "небоскрёб, высотный",
-                new ArrayList<>(Arrays.asList(spellingArray)).contains("high-rise"));
-        myWords.add("play around");
-        myWords.add("high-rise");
-        for (String s : myWords) {
-            WordsDataBase.addUserWord(this, s, null, true);
-            WordsDataBase.setOnLearning(this, s, new Date(System.currentTimeMillis() - 4 * 86400000));
-        }
-        myWords.clear();
-        myWords.add("determination");
-        myWords.add("dominance");
-        myWords.add("formidable");
-        myWords.add("indulge");
-        myWords.add("cast");
-        WordsDataBase.addUserWord(this, "devotion", "преданность",
-                new ArrayList<>(Arrays.asList(spellingArray)).contains("devotion"));
-        myWords.add("devotion");
-        myWords.add("glacier");
-        myWords.add("repent");
-        WordsDataBase.addUserWord(this, "ravage", "опустошать, разорять, грабить",
-                new ArrayList<>(Arrays.asList(spellingArray)).contains("ravage"));
-        myWords.add("ravage");
-        myWords.add("greed");
-        myWords.add("agenda");
-        WordsDataBase.addUserWord(this, "demise", "гибель, кончина, смерть", true);
-        myWords.add("demise");
-        for (String s : myWords) {
-            WordsDataBase.addUserWord(this, s, null, true);
-            WordsDataBase.setOnLearning(this, s, new Date(System.currentTimeMillis() - 3 * 86400000));
-        }
-        myWords.clear();
-        myWords.add("derive");
-        myWords.add("infuse");
-        myWords.add("corpse");
-        myWords.add("rid");
-        myWords.add("poise");
-        for (String s : myWords) {
-            WordsDataBase.addUserWord(this, s, null, true);
-            WordsDataBase.setOnLearning(this, s, new Date(System.currentTimeMillis() - 2 * 86400000));
-        }
-        myWords.clear();
-        myWords.add("vocation");
-        myWords.add("behold");
-        WordsDataBase.addUserWord(this, "fuse", "фитиль, запал", true);
-        myWords.add("fuse");
-        myWords.add("embed");
-        WordsDataBase.addUserWord(this, "jaded", "измученный, пресытившийся", true);
-        myWords.add("jaded");
-        myWords.add("dispel");
-        myWords.add("adrift");
-        myWords.add("rift");
-        myWords.add("discretion");
-        for (String s : myWords) {
-            WordsDataBase.addUserWord(this, s, null, true);
-            WordsDataBase.setOnLearning(this, s, new Date(System.currentTimeMillis() - 86400000));
-        }
-        myWords.clear();
-        myWords.add("confusion");
-        myWords.add("shatters");
-        myWords.add("render");
-        myWords.add("sever");
-        myWords.add("outspoken");
-        myWords.add("torment");
-        myWords.add("swirl");
-        for (String s : myWords) {
-            WordsDataBase.addUserWord(this, s, null, true);
-            //WordsDataBase.setOnLearning(this, s, new Date(System.currentTimeMillis()));
-        }
-        myWords.clear();
-        myWords.add("loathe");
-        myWords.add("deaf");
-        myWords.add("dumb");
-        myWords.add("limelight");
-        myWords.add("discern");
     }
 }

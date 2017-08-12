@@ -1,40 +1,28 @@
 package com.example.first.learnenglishwordssmart.services;
 
-import android.app.Activity;
 import android.app.IntentService;
 import android.content.Intent;
-import android.content.Context;
-import android.net.Uri;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
-import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.activities.MainActivity;
-import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
+import com.example.first.learnenglishwordssmart.providers.WordsHelper;
+import com.example.first.learnenglishwordssmart.providers.WordsProvider;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 
 public class DownloadDBService extends IntentService {
     private static final String EXTRA_URL = "extra_url";
     private static final String EXTRA_MESSENGER = "extra_messenger";
-    private static final double total = 6017024;
+    private static final double total = 6815744;
 
     public DownloadDBService() {
         super("DownloadDBService");
@@ -70,7 +58,7 @@ public class DownloadDBService extends IntentService {
             FileOutputStream outputStream;
             File directory = new File(getFilesDir().getAbsolutePath() + "/databases/");
             directory.mkdirs();
-            File file = new File(directory, WordsDataBase.DATABASE_NAME);
+            File file = new File(directory, WordsProvider.DATABASE_NAME);
             outputStream = new FileOutputStream(file);
             byte[] buffer = new byte[1024];
             double downloadedSize = 0;

@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,7 +53,7 @@ public class OptionsFragment extends Fragment {
                 int currentItem = pager.getCurrentItem();
                 if (!(((CardsActivity) getActivity()).mPagerAdapter.instantiateItem(pager, currentItem)
                         instanceof RewardFragment)) ((CardsActivity) getActivity())
-                        .setAdapter(((CardsActivity) getActivity()).primeType);
+                        .setAdapter();
             }
         });
         switch3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -72,7 +71,7 @@ public class OptionsFragment extends Fragment {
                 pager.setCurrentItem(currentItem, false);
             }
         });
-        if (((CardsActivity) getActivity()).primeType == 3)
+        if (((CardsActivity) getActivity()).primeType.equals(MainActivity.BIG_REPETITION))
             rootView.findViewById(R.id.transientLayout).setVisibility(View.VISIBLE);
         rootView.findViewById(R.id.clickableContainer).setOnClickListener(new View.OnClickListener() {
             @Override

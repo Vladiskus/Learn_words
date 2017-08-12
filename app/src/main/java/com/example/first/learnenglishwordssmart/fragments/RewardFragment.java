@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,9 +18,9 @@ import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.activities.CardsActivity;
 import com.example.first.learnenglishwordssmart.activities.MainActivity;
 import com.example.first.learnenglishwordssmart.classes.CustomViewPager;
-import com.example.first.learnenglishwordssmart.classes.MyReceiver;
+import com.example.first.learnenglishwordssmart.receivers.NotificationsReceiver;
 import com.example.first.learnenglishwordssmart.classes.Word;
-import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
+import com.example.first.learnenglishwordssmart.providers.WordsHelper;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,7 +32,7 @@ public class RewardFragment extends Fragment {
     ArrayList<Word> words;
     int number;
     int type;
-    int primeType;
+    String primeType;
     View rootView;
 
     @Override
@@ -43,9 +42,9 @@ public class RewardFragment extends Fragment {
         final CustomViewPager mPager = ((CardsActivity) getActivity()).mPager;
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         type = getArguments().getInt("type");
-        words = getActivity().getIntent().getParcelableArrayListExtra("words");
+        words = getActivity().getIntent().getParcelableArrayListExtra(MainActivity.EXTRA_WORDS);
         number = words.size();
-        primeType = getActivity().getIntent().getExtras().getInt("prime_type");
+        primeType = getActivity().getIntent().getExtras().getString(MainActivity.EXTRA_PRIME_TYPE);
         rootView.findViewById(R.id.againButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,7 +64,7 @@ public class RewardFragment extends Fragment {
             public void onClick(View v) {
                 if (type == 12) {
                     for (int i = 0; i < number; i++) {
-                        WordsDataBase.setOnLearning(getActivity(), words.get(i).getSpelling(), new Date());
+                        WordsHelper.setOnLearning(getActivity(), words.get(i).getSpelling(), new Date());
                         PreferenceManager.getDefaultSharedPreferences(getActivity()).edit().putInt(
                                 getActivity().getString(R.string.on_learning), MainActivity
                                         .getPreference(getActivity(), R.string.on_learning, 0) + 1).apply();
@@ -77,7 +76,7 @@ public class RewardFragment extends Fragment {
                     }
                     mPager.setCurrentItem(number + 1, true);
                 } else {
-                    if (primeType == 1) {
+                    if (primeType.equals(MainActivity.LEARN_NEW)) {
                         PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
                                 .putInt(getString(R.string.learn_new), 1).apply();
                         PreferenceManager.getDefaultSharedPreferences(getActivity())
@@ -85,13 +84,13 @@ public class RewardFragment extends Fragment {
                                 MainActivity.getPreference(getActivity(),
                                         R.string.small_repetition, 0) + 1).apply();
                     }
-                    if (primeType == 2) {
+                    if (primeType.equals(MainActivity.SMALL_REPETITION)) {
                         PreferenceManager.getDefaultSharedPreferences(getActivity())
                                 .edit().putInt(getString(R.string.small_repetition),
                                 MainActivity.getPreference(getActivity(),
                                         R.string.small_repetition, 0) + 1).apply();
                     }
-                    if (primeType == 3) {
+                    if (primeType.equals(MainActivity.BIG_REPETITION)) {
                         PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
                                 .putInt(getString(R.string.big_repetition), 1).apply();
                         PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
@@ -100,15 +99,15 @@ public class RewardFragment extends Fragment {
                             Date wordDate;
                             wordDate = words.get(i).getDate();
                             if (CardsActivity.markList.get(i) == 1) {
-                                WordsDataBase.success(getActivity(), words.get(i).getRank(), wordDate);
+                                WordsHelper.success(getActivity(), words.get(i).getRank(), wordDate);
                             } else
-                                WordsDataBase.fail(getActivity(), words.get(i).getRank(), wordDate);
+                                WordsHelper.fail(getActivity(), words.get(i).getRank(), wordDate);
                         }
                     }
                     setNotifications();
                     Intent intent = new Intent();
                     intent.setClass(getActivity(), MainActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(intent);
                 }
             }
@@ -164,18 +163,28 @@ public class RewardFragment extends Fragment {
                 else if (hours < 0) hours += 24;
                 calendar.set(Calendar.HOUR_OF_DAY, hours);
             }
-            Intent myReceiver = new Intent(getActivity().getApplicationContext(), MyReceiver.class);
-            myReceiver.putExtra("prime_type", i);
+            Intent myReceiver = new Intent(getActivity().getApplicationContext(), NotificationsReceiver.class);
+            switch (i) {
+                case 1:
+                    myReceiver.putExtra(MainActivity.EXTRA_PRIME_TYPE, MainActivity.LEARN_NEW);
+                    break;
+                case 2:
+                    myReceiver.putExtra(MainActivity.EXTRA_PRIME_TYPE, MainActivity.SMALL_REPETITION);
+                    break;
+                case 3:
+                    myReceiver.putExtra(MainActivity.EXTRA_PRIME_TYPE, MainActivity.BIG_REPETITION);
+                    break;
+            }
             PendingIntent pi = PendingIntent.getBroadcast(getActivity(),
                     i, myReceiver, PendingIntent.FLAG_UPDATE_CURRENT);
             AlarmManager am = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
             if (calendar.getTimeInMillis() < System.currentTimeMillis())
                 calendar.setTimeInMillis(calendar.getTimeInMillis() + 86400000);
-            if (i != 2) am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+            if (i != 2) am.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(),
                     AlarmManager.INTERVAL_DAY, pi);
             else if (MainActivity.getPreference(getActivity(), R.string.small_repetition, 0) <= 3) {
                 int[] time = new int[]{900000, 3600000, 10800000};
-                am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() +
+                am.set(AlarmManager.RTC, System.currentTimeMillis() +
                         time[MainActivity.getPreference(getActivity(), R.string.small_repetition, 0) - 1], pi);
             }
         }

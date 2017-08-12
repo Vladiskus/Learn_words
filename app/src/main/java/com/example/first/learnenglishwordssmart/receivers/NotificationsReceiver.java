@@ -1,4 +1,4 @@
-package com.example.first.learnenglishwordssmart.classes;
+package com.example.first.learnenglishwordssmart.receivers;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -10,38 +10,39 @@ import android.support.v4.app.NotificationCompat;
 
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.activities.CardsActivity;
+import com.example.first.learnenglishwordssmart.activities.MainActivity;
 import com.example.first.learnenglishwordssmart.activities.SelectionActivity;
-import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
+import com.example.first.learnenglishwordssmart.providers.WordsHelper;
 
 /**
  * Created by Vlad on 18-Mar-17.
  */
 
-public class MyReceiver extends BroadcastReceiver {
+public class NotificationsReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent arg) {
-        int primeType = arg.getExtras().getInt("prime_type");
+        String primeType = arg.getExtras().getString(MainActivity.EXTRA_PRIME_TYPE);
         Intent intent = new Intent();
-        intent.putExtra("prime_type", primeType);
-        intent.putExtra("words", WordsDataBase.getWords(context, primeType, null));
+        intent.putExtra(MainActivity.EXTRA_PRIME_TYPE, primeType);
+        intent.putExtra(MainActivity.EXTRA_WORDS, WordsHelper.getWords(context, primeType, null));
         NotificationCompat.Builder mBuilder;
         switch (primeType) {
-            case 1:
+            case MainActivity.LEARN_NEW:
                 intent.setClass(context, SelectionActivity.class);
                 mBuilder = new NotificationCompat.Builder(context)
                         .setSmallIcon(R.drawable.web_hi_res_512)
                         .setContentTitle(context.getString(R.string.title1))
                         .setContentText(context.getString(R.string.text1));
                 break;
-            case 2:
+            case MainActivity.SMALL_REPETITION:
                 intent.setClass(context, CardsActivity.class);
                 mBuilder = new NotificationCompat.Builder(context)
                         .setSmallIcon(R.drawable.web_hi_res_512)
                         .setContentTitle(context.getString(R.string.title2))
                         .setContentText(context.getString(R.string.text2));
                 break;
-            case 3:
+            case MainActivity.BIG_REPETITION:
                 intent.setClass(context, CardsActivity.class);
                 mBuilder = new NotificationCompat.Builder(context)
                         .setSmallIcon(R.drawable.web_hi_res_512)
@@ -58,7 +59,7 @@ public class MyReceiver extends BroadcastReceiver {
         mBuilder.setAutoCancel(true);
         NotificationManager mNotificationManager = (NotificationManager) context
                 .getSystemService(Context.NOTIFICATION_SERVICE);
-        if (WordsDataBase.getWords(context, primeType, null).size() != 0) {
+        if (WordsHelper.getWords(context, primeType, null).size() != 0) {
             mNotificationManager.notify(1, mBuilder.build());
         }
     }

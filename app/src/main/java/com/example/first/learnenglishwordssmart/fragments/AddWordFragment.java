@@ -1,9 +1,10 @@
 package com.example.first.learnenglishwordssmart.fragments;
 
 
+import android.content.Context;
 import android.os.Bundle;
-import android.app.Fragment;
-import android.util.Log;
+import android.support.v4.app.Fragment;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +17,7 @@ import android.widget.TextView;
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.activities.SelectionActivity;
 import com.example.first.learnenglishwordssmart.classes.Word;
-import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
+import com.example.first.learnenglishwordssmart.providers.WordsHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,14 +29,15 @@ public class AddWordFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_add_word, container, false);
         final AutoCompleteTextView engView = (AutoCompleteTextView) rootView.findViewById(R.id.engWord);
         final TextView rusView = (TextView) rootView.findViewById(R.id.rusWord);
-        final String[] spellingArray = WordsDataBase.getSpellingArray(getActivity(), false);
+        final ArrayList <String> spellingArray = WordsHelper.getWordsSpelling(getActivity(), null,
+                ((SelectionActivity) getActivity()).wordsSpelling);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(),
                 R.layout.support_simple_spinner_dropdown_item, spellingArray);
         engView.setAdapter(adapter);
         engView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Word word = WordsDataBase.getWordFromDataBase(getActivity(), engView.getText().toString());
+                Word word = WordsHelper.getWordFromDataBase(getActivity(), engView.getText().toString());
                 rusView.setText(word.getTranslation());
             }
         });
@@ -55,13 +57,13 @@ public class AddWordFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (engView.getText().toString().length() != 0 && rusView.getText().toString().length() != 0) {
-                    WordsDataBase.addUserWord(getActivity(), engView.getText().toString(), rusView.getText().toString(),
+                    WordsHelper.addUserWord(getActivity(), engView.getText().toString(), rusView.getText().toString(),
                             new ArrayList<>(Arrays.asList(spellingArray)).contains(engView.getText().toString()));
-                    ((SelectionActivity) getActivity()).mContainerView.removeViewAt(0);
-                    int lastPosition = ((SelectionActivity) getActivity()).mContainerView.getChildCount() - 1;
+                    ViewGroup container = (ViewGroup) getActivity().findViewById(R.id.container);
+                    container.removeViewAt(0);
+                    int lastPosition = container.getChildCount() - 1;
                     ((SelectionActivity) getActivity()).addWord(engView.getText().toString(),
                             rusView.getText().toString(), lastPosition);
-                    //((SelectionActivity) getActivity()).updateAdapterLight();
                 }
                 cancel();
             }
@@ -75,7 +77,7 @@ public class AddWordFragment extends Fragment {
         engView.setFocusableInTouchMode(true);
         engView.requestFocus();
         final InputMethodManager inputMethodManager = (InputMethodManager) getActivity()
-                .getSystemService(getActivity().INPUT_METHOD_SERVICE);
+                .getSystemService(Context.INPUT_METHOD_SERVICE);
         inputMethodManager.showSoftInput(engView, InputMethodManager.SHOW_IMPLICIT);
         super.onStart();
     }
@@ -84,9 +86,9 @@ public class AddWordFragment extends Fragment {
         View focusView = getActivity().getCurrentFocus();
         if (focusView != null) {
             InputMethodManager imm = (InputMethodManager) getActivity()
-                    .getSystemService(getActivity().INPUT_METHOD_SERVICE);
+                    .getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(focusView.getWindowToken(), 0);
         }
-        getActivity().getFragmentManager().popBackStack();
+        getActivity().getSupportFragmentManager().popBackStack();
     }
 }

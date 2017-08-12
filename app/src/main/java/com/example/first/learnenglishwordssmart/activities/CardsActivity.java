@@ -3,11 +3,6 @@ package com.example.first.learnenglishwordssmart.activities;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.Drawable;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NavUtils;
@@ -17,7 +12,6 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.animation.LinearInterpolator;
@@ -27,8 +21,6 @@ import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.classes.CustomViewPager;
 import com.example.first.learnenglishwordssmart.classes.SoundHelper;
 import com.example.first.learnenglishwordssmart.classes.Word;
-import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
-import com.example.first.learnenglishwordssmart.fragments.ChangeNumberFragment;
 import com.example.first.learnenglishwordssmart.fragments.ContainerFragment;
 import com.example.first.learnenglishwordssmart.fragments.NewLevelFragment;
 import com.example.first.learnenglishwordssmart.fragments.OptionsFragment;
@@ -36,7 +28,6 @@ import com.example.first.learnenglishwordssmart.fragments.RewardFragment;
 import com.example.first.learnenglishwordssmart.fragments.WritingFragment;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class CardsActivity extends AppCompatActivity {
 
@@ -46,7 +37,7 @@ public class CardsActivity extends AppCompatActivity {
     public ArrayList<Word> words;
     public SoundHelper soundHelper;
     public int number;
-    public int primeType;
+    public String primeType;
     Context mContext;
     ProgressBar progressBar;
     public static ArrayList<Integer> markList = new ArrayList<>();
@@ -55,18 +46,18 @@ public class CardsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cards);
-        primeType = getIntent().getExtras().getInt("prime_type");
+        primeType = getIntent().getExtras().getString(MainActivity.EXTRA_PRIME_TYPE);
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         switch (primeType) {
-            case 1:
+            case MainActivity.LEARN_NEW:
                 getSupportActionBar().setTitle(R.string.cards1);
                 break;
-            case 2:
+            case MainActivity.SMALL_REPETITION:
                 getSupportActionBar().setTitle(R.string.cards2);
                 break;
-            case 3:
+            case MainActivity.BIG_REPETITION:
                 getSupportActionBar().setTitle(R.string.cards3);
                 break;
         }
@@ -80,7 +71,7 @@ public class CardsActivity extends AppCompatActivity {
         for (int i = 0; i < number; i++) {
             markList.add(1);
         }
-        setAdapter(primeType);
+        setAdapter();
         pageChangeListener = new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int i, float v, int i1) {
@@ -90,7 +81,7 @@ public class CardsActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int i) {
                 ObjectAnimator animation;
-                if (primeType == 1) animation = ObjectAnimator.ofInt(progressBar,
+                if (primeType.equals(MainActivity.LEARN_NEW)) animation = ObjectAnimator.ofInt(progressBar,
                         "progress", 10000 * i / (number * 2 + 1));
                 else animation = ObjectAnimator.ofInt(progressBar, "progress", 10000 * i / number);
                 animation.setDuration(200);
@@ -99,7 +90,7 @@ public class CardsActivity extends AppCompatActivity {
                 Fragment fragment = (Fragment) mPager.getAdapter().instantiateItem(mPager,
                         mPager.getCurrentItem());
                 if (fragment instanceof RewardFragment) ((RewardFragment) fragment).setInfo();
-                if (fragment instanceof ContainerFragment && primeType == 1) {
+                if (fragment instanceof ContainerFragment && primeType.equals(MainActivity.LEARN_NEW)) {
                     mPager.setPagingEnabled(true);
                 } else mPager.setPagingEnabled(false);
                 if (MainActivity.getPreference(mContext, R.string.audio, 1) == 1) {
@@ -124,15 +115,15 @@ public class CardsActivity extends AppCompatActivity {
         });
     }
 
-    public void setAdapter(final int i) {
+    public void setAdapter() {
         mPagerAdapter = new FragmentStatePagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
                 int type = MainActivity.getPreference(mContext, R.string.small_repetition, 0);
                 Bundle args = new Bundle();
                 Fragment fragment = new Fragment();
-                switch (i) {
-                    case 1:
+                switch (primeType) {
+                    case MainActivity.LEARN_NEW:
                         if (position < number) {
                             args.putInt("position", position);
                             args.putInt("type", 1);
@@ -151,7 +142,7 @@ public class CardsActivity extends AppCompatActivity {
                             fragment = new RewardFragment();
                         }
                         break;
-                    case 2:
+                    case MainActivity.SMALL_REPETITION:
                         if (position < number) {
                             if (type == 1) {
                                 args.putInt("position", position);
@@ -170,7 +161,7 @@ public class CardsActivity extends AppCompatActivity {
                             fragment = new RewardFragment();
                         }
                         break;
-                    case 3:
+                    case MainActivity.BIG_REPETITION:
                         if (position < number) {
                             args.putInt("position", position);
                             if (MainActivity.getPreference(mContext, R.string.en_ru, 1) == 0)
@@ -189,18 +180,18 @@ public class CardsActivity extends AppCompatActivity {
 
             @Override
             public int getCount() {
-                if (i == 1) return (number + 1) * 2;
+                if (primeType.equals(MainActivity.LEARN_NEW)) return (number + 1) * 2;
                 else return number + 1;
             }
         };
-        if (i == 1) mPager.setPagingEnabled(true);
+        if (primeType.equals(MainActivity.LEARN_NEW)) mPager.setPagingEnabled(true);
         else mPager.setPagingEnabled(false);
         mPager.setAdapter(mPagerAdapter);
         progressBar.setProgress(0);
     }
 
     public void pushNewLevel() {
-        getFragmentManager().beginTransaction().setCustomAnimations(android.R.animator.fade_in,
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(android.R.animator.fade_in,
                 android.R.animator.fade_out).add(R.id.fragmentContainer2,
                 new NewLevelFragment()).addToBackStack(null).commit();
     }
@@ -228,10 +219,11 @@ public class CardsActivity extends AppCompatActivity {
                 else getSupportFragmentManager().beginTransaction().remove(fragment).commit();
                 return true;
             case android.R.id.home:
-                if (primeType == 1) {
+                if (primeType.equals(MainActivity.LEARN_NEW)) {
                     Intent intent = new Intent();
-                    intent.putExtra("prime_type", 1);
-                    intent.putExtra("words", words);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.putExtra(MainActivity.EXTRA_PRIME_TYPE, MainActivity.LEARN_NEW);
+                    intent.putExtra(MainActivity.EXTRA_WORDS, words);
                     intent.setClass(mContext, SelectionActivity.class);
                     NavUtils.navigateUpTo(this, intent);
                     return true;

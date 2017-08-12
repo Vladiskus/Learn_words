@@ -5,17 +5,13 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
-import android.support.v4.os.AsyncTaskCompat;
-import android.util.Log;
 import android.widget.ImageButton;
 
 import com.example.first.learnenglishwordssmart.R;
-import com.example.first.learnenglishwordssmart.fragments.ContainerFragment;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -59,24 +55,25 @@ public class SoundHelper {
                 }
             }
         };
+        final Runnable onStartRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (type == 0) speaker.setImageResource(R.drawable.speaker_small_pressed);
+                if (type == 1) speaker.setImageResource(R.drawable.speaker_big_pressed);
+                if (type == 2) {
+                    speaker.setBackgroundDrawable(new BitmapDrawable(activity.getResources(), Bitmap.createScaledBitmap
+                            (BitmapFactory.decodeResource(activity.getResources(), R.drawable.background_stroked),
+                                    (int) (density * 50), (int) (density * 50), true)));
+                    speaker.setImageDrawable(new BitmapDrawable(activity.getResources(), Bitmap.createScaledBitmap
+                            (BitmapFactory.decodeResource(activity.getResources(), R.drawable.speaker_big_default),
+                                    (int) (density * 30), (int) (density * 30), true)));
+                }
+            }
+        };
         tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override
             public void onStart(String utteranceId) {
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (type == 0) speaker.setImageResource(R.drawable.speaker_small_pressed);
-                        if (type == 1) speaker.setImageResource(R.drawable.speaker_big_pressed);
-                        if (type == 2) {
-                            speaker.setBackgroundDrawable(new BitmapDrawable(activity.getResources(), Bitmap.createScaledBitmap
-                                    (BitmapFactory.decodeResource(activity.getResources(), R.drawable.background_stroked),
-                                            (int) (density * 50), (int) (density * 50), true)));
-                            speaker.setImageDrawable(new BitmapDrawable(activity.getResources(), Bitmap.createScaledBitmap
-                                    (BitmapFactory.decodeResource(activity.getResources(), R.drawable.speaker_big_default),
-                                            (int) (density * 30), (int) (density * 30), true)));
-                        }
-                    }
-                });
+                activity.runOnUiThread(onStartRunnable);
             }
 
             @Override

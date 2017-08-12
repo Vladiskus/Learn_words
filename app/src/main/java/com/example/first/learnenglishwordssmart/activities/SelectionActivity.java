@@ -1,18 +1,14 @@
 package com.example.first.learnenglishwordssmart.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.support.v4.app.TaskStackBuilder;
-import android.support.v4.os.AsyncTaskCompat;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,23 +20,23 @@ import android.widget.TextView;
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.classes.SoundHelper;
 import com.example.first.learnenglishwordssmart.classes.Word;
-import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
+import com.example.first.learnenglishwordssmart.providers.WordsHelper;
 import com.example.first.learnenglishwordssmart.fragments.AddWordFragment;
 import com.example.first.learnenglishwordssmart.fragments.ChangeNumberFragment;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import me.grantland.widget.AutofitHelper;
-
 public class SelectionActivity extends AppCompatActivity {
 
-    public ViewGroup mContainerView;
+    private ViewGroup container;
     private Button numberButton;
-    public SoundHelper soundHelper;
-    public int number;
-    public int primeType;
-    ArrayList<Word> words;
+    private SoundHelper soundHelper;
+    private String primeType;
+    private ArrayList<Word> words;
+    public ArrayList<String> wordsSpelling = new ArrayList<>();
+    private int number;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,16 +47,18 @@ public class SelectionActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle(R.string.selection);
         soundHelper = new SoundHelper(this);
-        number = PreferenceManager.getDefaultSharedPreferences(this)
-                .getInt(getString(R.string.number_of_words), 10);
-        primeType = getIntent().getExtras().getInt("prime_type");
-        words = getIntent().getExtras().getParcelableArrayList("words");
+        number = MainActivity.getPreference(this, R.string.number_of_words, 10);
+        primeType = getIntent().getExtras().getString(MainActivity.EXTRA_PRIME_TYPE);
+        words = getIntent().getExtras().getParcelableArrayList(MainActivity.EXTRA_WORDS);
+        for (Word word : words) {
+            wordsSpelling.add(word.getSpelling());
+        }
         numberButton = (Button) findViewById(R.id.numberButton);
         numberButton.setText(String.valueOf(number));
         numberButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getFragmentManager().beginTransaction()
+                getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(android.R.animator.fade_in,
                                 android.R.animator.fade_out).add(R.id.fragmentContainer,
                         new ChangeNumberFragment()).addToBackStack(null).commit();
@@ -71,13 +69,13 @@ public class SelectionActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Collections.reverse(words);
                 Intent intent = new Intent();
-                intent.putExtra("prime_type", primeType);
-                intent.putExtra("words", words);
+                intent.putExtra(MainActivity.EXTRA_PRIME_TYPE, primeType);
+                intent.putExtra(MainActivity.EXTRA_WORDS, words);
                 intent.setClass(SelectionActivity.this, CardsActivity.class);
                 startActivity(intent);
             }
         });
-        mContainerView = (ViewGroup) findViewById(R.id.container);
+        container = (ViewGroup) findViewById(R.id.container);
         View endView = View.inflate(this, R.layout.last_position, null);
         endView.findViewById(R.id.addButton).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,12 +83,12 @@ public class SelectionActivity extends AppCompatActivity {
                 addClick();
             }
         });
-        mContainerView.addView(endView, 0);
+        container.addView(endView, 0);
         fillContainer();
     }
 
     public void addClick() {
-        getFragmentManager().beginTransaction()
+        getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(android.R.animator.fade_in,
                         android.R.animator.fade_out).add(R.id.fragmentContainer,
                 new AddWordFragment()).addToBackStack(null).commit();
@@ -102,14 +100,14 @@ public class SelectionActivity extends AppCompatActivity {
         int oldNumber = PreferenceManager.getDefaultSharedPreferences(this)
                 .getInt(getString(R.string.number_of_words_old), 0);
         numberButton.setText(String.valueOf(number));
-        words = WordsDataBase.getWords(this, primeType, null);
+        words = WordsHelper.getWords(this, primeType, null);
         if (number > oldNumber) {
             for (int i = oldNumber; i < words.size(); i++) {
                 addWord(words.get(i).getSpelling(), words.get(i).getTranslation(), 0);
             }
         } else {
             for (int i = 0; i < oldNumber - number; i++) {
-                mContainerView.removeViewAt(0);
+                container.removeViewAt(0);
             }
         }
         PreferenceManager.getDefaultSharedPreferences(this).edit()
@@ -141,27 +139,37 @@ public class SelectionActivity extends AppCompatActivity {
         convertView.findViewById(R.id.imageCancel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mContainerView.removeView(convertView);
-                AsyncTaskCompat.executeParallel(new RefreshTask(), spelling);
+                container.removeView(convertView);
+                new RefreshTask(SelectionActivity.this).execute(spelling);
             }
         });
-        mContainerView.addView(convertView, position);
+        container.addView(convertView, position);
     }
 
-    private class RefreshTask extends AsyncTask<String, Void, Void> {
+    private static class RefreshTask extends AsyncTask<String, Void, Void> {
+        WeakReference<SelectionActivity> weakActivity;
         int last;
+
+        RefreshTask(SelectionActivity activity) {
+            weakActivity = new WeakReference<>(activity);
+        }
 
         @Override
         protected Void doInBackground(String... spellings) {
-            WordsDataBase.setIsKnown(SelectionActivity.this, spellings[0]);
-            words = WordsDataBase.getWords(SelectionActivity.this, primeType, null);
-            last = words.size() - 1;
+            SelectionActivity activity = weakActivity.get();
+            if (activity != null) {
+                WordsHelper.setIsKnown(activity, spellings[0]);
+                activity.words = WordsHelper.getWords(activity, activity.primeType, null);
+                last = activity.words.size() - 1;
+            }
             return null;
         }
 
         @Override
         protected void onPostExecute(Void voids) {
-            addWord(words.get(last).getSpelling(), words.get(last).getTranslation(), 0);
+            SelectionActivity activity = weakActivity.get();
+            if (activity != null) activity.addWord(activity.words.get(last).getSpelling(),
+                    activity.words.get(last).getTranslation(), 0);
         }
     }
 
@@ -181,10 +189,11 @@ public class SelectionActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.search:
-                if (getFragmentManager().findFragmentById(R.id.fragmentContainer) == null)
-                    addClick();
-                else ((AddWordFragment) getFragmentManager()
-                        .findFragmentById(R.id.fragmentContainer)).cancel();
+                Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
+                if (fragment == null) addClick();
+                else if (fragment instanceof AddWordFragment)
+                    ((AddWordFragment) fragment).cancel();
+                else getSupportFragmentManager().popBackStack();
                 return true;
             case android.R.id.home:
                 Intent upIntent = NavUtils.getParentActivityIntent(this);

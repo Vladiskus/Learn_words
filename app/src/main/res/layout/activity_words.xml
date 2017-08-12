@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.example.first.learnenglishwordssmart.activities.WordsActivity">
 
     <RelativeLayout
@@ -17,20 +17,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/main"
         tools:context="com.example.first.learnenglishwordssmart.activities.WordsActivity">
-<!--
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:background="@color/colorPrimary"
-            android:gravity="center"
-            android:padding="10dp"
-            android:text="@string/game_title0"
-            android:textColor="@color/white"
-            android:textSize="21sp" />-->
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/my_toolbar"
@@ -38,8 +25,22 @@
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             android:elevation="4dp"
+            android:translationZ="4dp"
+            android:gravity="center"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_gravity="end"
+                android:layout_marginRight="2dp"
+                android:entries="@array/multipliers"
+                android:popupBackground="@color/lightGray"
+                android:background="?selectableItemBackgroundBorderless"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent" />
+
+        </android.support.v7.widget.Toolbar>
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -67,6 +68,12 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <ProgressBar
+                android:id="@+id/roundProgressBar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_gravity="center" />
         </FrameLayout>
 
     </RelativeLayout>

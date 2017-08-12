@@ -3,12 +3,13 @@ package com.example.first.learnenglishwordssmart.classes;
 import android.content.Context;
 import android.util.Log;
 
-import com.example.first.learnenglishwordssmart.databases.WordsDataBase;
+import com.example.first.learnenglishwordssmart.providers.WordsHelper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,8 +19,7 @@ import java.util.regex.Pattern;
 
 public class DataBaseFiller {
     public static void FillWordsDataBase(Context mContext) {
-        WordsDataBase.createVoidDataBase(mContext);
-        Log.e("start", "0");
+        WordsHelper.createVoidDataBase(mContext);
         for (int q = 1; q <= 6; q++) {
             StringBuilder string = new StringBuilder("");
             try {
@@ -170,10 +170,10 @@ public class DataBaseFiller {
                     }
                 }
                 word.setKnown(false);
-                word.setDate(null);
-                WordsDataBase.addWordToDataBase(word, mContext);
+                word.setDate(new Date());
+                WordsHelper.addWordToDataBase(word, mContext);
+                Log.e("words", word.getRank() +  word.getSpelling());
             }
-            Log.e("finish", String.valueOf(q));
         }
     }
 }

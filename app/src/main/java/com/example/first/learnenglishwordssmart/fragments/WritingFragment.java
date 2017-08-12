@@ -5,11 +5,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +21,6 @@ import android.widget.TextView;
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.activities.CardsActivity;
 import com.example.first.learnenglishwordssmart.activities.MainActivity;
-import com.example.first.learnenglishwordssmart.classes.SoundHelper;
 import com.example.first.learnenglishwordssmart.classes.Word;
 
 import java.util.ArrayList;
@@ -117,7 +115,7 @@ public class WritingFragment extends Fragment {
                                 button.setBackgroundColor(parentActivity.getResources().getColor(R.color.red));
                                 ((Vibrator) parentActivity.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(50);
                             }
-                            new ColorTask().execute((Button) button);
+                            resetColor(button);
                         }
                     }
                 });
@@ -131,36 +129,32 @@ public class WritingFragment extends Fragment {
                     errors = errors + 2;
                     number++;
                     setWord();
-                    new ColorTask().execute(new Button(parentActivity));
+                    checkWord();
                 }
             }
         });
         return rootView;
     }
 
-    private class ColorTask extends AsyncTask<Button, Void, Button> {
-
-        @Override
-        protected Button doInBackground(Button... views) {
-            try {
-                Thread.sleep(300);
-            } catch (InterruptedException e) {
+    private void resetColor(final Button button) {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                button.setBackgroundColor(parentActivity.getResources().getColor(R.color.white));
+                checkWord();
             }
-            return views[0];
-        }
+        }, 300);
+    }
 
-        @Override
-        protected void onPostExecute(Button button) {
-            button.setBackgroundColor(parentActivity.getResources().getColor(R.color.white));
-            if (wordView.getText().charAt(wordView.getText().length() - 1) ==
-                    spelling.charAt(spelling.length() - 1)) {
-                if (errors > (spelling.length() - difference) / 2)
-                    CardsActivity.markList.set(position, 0);
-                if (parentActivity.primeType == 1)
-                    parentActivity.mPager.setCurrentItem(position + 2 + MainActivity
-                            .getPreference(parentActivity, R.string.number_of_words, 10), true);
-                else parentActivity.mPager.setCurrentItem(position + 1, true);
-            }
+    private void checkWord() {
+        if (wordView.getText().charAt(wordView.getText().length() - 1) ==
+                spelling.charAt(spelling.length() - 1)) {
+            if (errors > (spelling.length() - difference) / 2)
+                CardsActivity.markList.set(position, 0);
+            if (parentActivity.primeType.equals(MainActivity.LEARN_NEW))
+                parentActivity.mPager.setCurrentItem(position + 2 + MainActivity
+                        .getPreference(parentActivity, R.string.number_of_words, 10), true);
+            else parentActivity.mPager.setCurrentItem(position + 1, true);
         }
     }
 
@@ -209,23 +203,11 @@ public class WritingFragment extends Fragment {
     }
 
     public void makeSound(int time) {
-        new SleepTask().execute(time);
-    }
-
-    private class SleepTask extends AsyncTask<Integer, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Integer... mSec) {
-            try {
-                Thread.sleep(mSec[0]);
-            } catch (InterruptedException e) {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                parentActivity.soundHelper.spellIt(parentActivity, spelling, speaker, 2);
             }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void voids) {
-            parentActivity.soundHelper.spellIt(parentActivity, spelling, speaker, 2);
-        }
+        }, time);
     }
 }
