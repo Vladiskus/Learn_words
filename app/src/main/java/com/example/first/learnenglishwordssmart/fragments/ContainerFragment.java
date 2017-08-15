@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,29 +30,29 @@ public class ContainerFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_container, container, false);
-        position = getArguments().getInt("position");
-        type = getArguments().getInt("type");
-        if (MainActivity.getPreference(getActivity(), R.string.en_ru, 1) == 0) {
+        position = getArguments().getInt(CardsActivity.POSITION);
+        type = getArguments().getInt(CardsActivity.TYPE);
+        if (MainActivity.getPreference(getActivity(), R.string.en_ru, 1) == 0 ||
+                (type == 3 && ((CardsActivity) getActivity()).primeType.equals(MainActivity.SMALL_REPETITION))) {
             fragment = new CardBackFragment();
         } else {
             fragment = new CardFrontFragment();
             isShowingFront = true;
         }
-        if (savedInstanceState != null)
-            isShowingFront = savedInstanceState.getBoolean("isShowingFront");
+        if (savedInstanceState != null) isShowingFront = savedInstanceState.getBoolean("isShowingFront");
         Bundle args = new Bundle();
         knownButton = (Button) rootView.findViewById(R.id.knownButton);
         unknownButton = (Button) rootView.findViewById(R.id.unknownButton);
-        args.putInt("position", position);
-        args.putInt("type", type);
+        args.putInt(CardsActivity.POSITION, position);
+        args.putInt(CardsActivity.TYPE, type);
         if (type == 1) {
             rootView.findViewById(R.id.buttons).setVisibility(View.GONE);
         } else turnOnButtons();
         knownButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                flipCard(position, MainActivity.getPreference(getActivity(), R.string.en_ru, 1) == 0);
-                makeSound(200, 600);
+                flipCard(position);
+                makeSound(200, 800);
                 turnOffButtons();
 
             }
@@ -59,14 +60,14 @@ public class ContainerFragment extends Fragment {
         unknownButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                flipCard(position, MainActivity.getPreference(getActivity(), R.string.en_ru, 1) == 0);
-                CardsActivity.markList.set(position, 0);
+                flipCard(position);
+                ((CardsActivity) getActivity()).markList.set(position, 0);
                 makeSound(200, 1600);
                 turnOffButtons();
             }
         });
         boolean c = position == getActivity().getIntent().getExtras()
-                .getParcelableArrayList("words").size() - 1;
+                .getParcelableArrayList(MainActivity.EXTRA_WORDS).size() - 1;
         if (!(savedInstanceState == null || savedInstanceState.getBoolean("localTrigger1") == globalTrigger1 ||
                 (savedInstanceState.getBoolean("localTrigger2") == globalTrigger2 && c))) {
             fragment = (isShowingFront) ? new CardFrontFragment() : new CardBackFragment();
@@ -87,12 +88,12 @@ public class ContainerFragment extends Fragment {
         changeGlobalTrigger(1);
     }
 
-    public void flipCard(int position, boolean isShowingBack) {
-        if (isShowingBack) {
+    public void flipCard(int position) {
+        if (!isShowingFront) {
             Fragment fragment = new CardFrontFragment();
             Bundle args = new Bundle();
             args.putInt("position", position);
-            args.putInt("type", type);
+            args.putInt(CardsActivity.TYPE, type);
             fragment.setArguments(args);
             this.fragment = fragment;
             getChildFragmentManager().beginTransaction().setCustomAnimations(
@@ -105,8 +106,8 @@ public class ContainerFragment extends Fragment {
         } else {
             Fragment fragment = new CardBackFragment();
             Bundle args = new Bundle();
-            args.putInt("position", position);
-            args.putInt("type", type);
+            args.putInt(CardsActivity.POSITION, position);
+            args.putInt(CardsActivity.TYPE, type);
             fragment.setArguments(args);
             this.fragment = fragment;
             getChildFragmentManager().beginTransaction().setCustomAnimations(

@@ -1,5 +1,7 @@
 package com.example.first.learnenglishwordssmart.activities;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -263,7 +265,6 @@ public class WordsActivity extends AppCompatActivity {
                 for (Runnable runnable : activity.fallRunnables)
                     activity.fallHandler.removeCallbacks(runnable);
                 activity.isForbidden = true;
-
                 activity.findViewById(R.id.roundProgressBar).setVisibility(View.VISIBLE);
             }
         }

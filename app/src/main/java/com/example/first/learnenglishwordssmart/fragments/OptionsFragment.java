@@ -22,6 +22,7 @@ public class OptionsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_options, container, false);
+        final CardsActivity activity = (CardsActivity) getActivity();
         Switch switch1 = ((Switch) rootView.findViewById(R.id.switch1));
         Switch switch2 = ((Switch) rootView.findViewById(R.id.switch2));
         Switch switch3 = ((Switch) rootView.findViewById(R.id.switch3));
@@ -44,16 +45,18 @@ public class OptionsFragment extends Fragment {
                 PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
                         .putInt(getString(R.string.random), isChecked ? 1 : 0).apply();
                 if (isChecked) {
-                    Collections.shuffle(((CardsActivity) getActivity()).words);
+                    Collections.shuffle(activity.words);
                 } else {
-                    ((CardsActivity) getActivity()).words = getActivity().getIntent()
-                            .getExtras().getParcelableArrayList("words");
+                    activity.words = getActivity().getIntent()
+                            .getExtras().getParcelableArrayList(MainActivity.EXTRA_WORDS);
                 }
-                ViewPager pager = ((CardsActivity) getActivity()).mPager;
+                for (int i = 0; i < activity.number; i++) {
+                    ((CardsActivity) getActivity()).markList.set(i, 1);
+                }
+                ViewPager pager = activity.mPager;
                 int currentItem = pager.getCurrentItem();
-                if (!(((CardsActivity) getActivity()).mPagerAdapter.instantiateItem(pager, currentItem)
-                        instanceof RewardFragment)) ((CardsActivity) getActivity())
-                        .setAdapter();
+                if (!(activity.mPagerAdapter.instantiateItem(pager, currentItem)
+                        instanceof RewardFragment)) activity.setAdapter();
             }
         });
         switch3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -61,17 +64,17 @@ public class OptionsFragment extends Fragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 PreferenceManager.getDefaultSharedPreferences(getActivity()).edit()
                         .putInt(getString(R.string.en_ru), isChecked ? 1 : 0).apply();
-                ViewPager pager = ((CardsActivity) getActivity()).mPager;
+                ViewPager pager = activity.mPager;
                 int currentItem = pager.getCurrentItem();
                 for (int i = -1; i <= 1; i++) {
-                    if (currentItem + i >= 0 && currentItem + i < ((CardsActivity) getActivity()).number)
+                    if (currentItem + i >= 0 && currentItem + i < activity.number)
                         ((ContainerFragment) pager.getAdapter().instantiateItem(pager, currentItem + i))
-                                .flipCard(currentItem + i, isChecked);
+                                .flipCard(currentItem + i);
                 }
                 pager.setCurrentItem(currentItem, false);
             }
         });
-        if (((CardsActivity) getActivity()).primeType.equals(MainActivity.BIG_REPETITION))
+        if (activity.primeType.equals(MainActivity.BIG_REPETITION))
             rootView.findViewById(R.id.transientLayout).setVisibility(View.VISIBLE);
         rootView.findViewById(R.id.clickableContainer).setOnClickListener(new View.OnClickListener() {
             @Override

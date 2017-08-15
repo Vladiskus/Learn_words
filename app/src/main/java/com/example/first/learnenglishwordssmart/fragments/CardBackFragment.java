@@ -25,40 +25,40 @@ public class CardBackFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_card_back, container, false);
         ArrayList<Word> words = ((CardsActivity) getActivity()).words;
-        int position = getArguments().getInt("position");
+        int position = getArguments().getInt(CardsActivity.POSITION);
         TextView titleView = (TextView) rootView.findViewById(R.id.translation);
         String title = words.get(position).getTranslation();
         titleView.setText(title);
         titleView.setMaxLines(2);
         AutofitHelper.create(titleView);
-        TextView samplesView = (TextView) rootView.findViewById(R.id.samples);
-        String spelling = words.get(position).getSpelling();
-        String sample = words.get(position).getSamples();
-        if (sample == null) {
-            titleView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
-            sample = "";
-        }
-        Pattern p = Pattern.compile("[^ \\n]*" + spelling + "[^ \\n]*");
-        Matcher m = p.matcher(sample);
-        StringBuffer sb = new StringBuffer();
-        while (m.find()) {
-            m.appendReplacement(sb, "<i>" + m.group()+ "</i>");
-        }
-        m.appendTail(sb);
-        sample = "<font color=\"#000000\">" + sb.toString().replaceAll(" — ", "</font><br>")
-                .replaceAll("\\n", "<br><br><font color=\"#000000\">");
-        samplesView.setText(Html.fromHtml(sample));
-        if (getArguments().getInt("type") == 1) {
+        if (getArguments().getInt(CardsActivity.TYPE) == 1) {
+            TextView samplesView = (TextView) rootView.findViewById(R.id.samples);
+            String spelling = words.get(position).getSpelling();
+            String sample = words.get(position).getSamples();
+            if (sample == null) {
+                titleView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+                sample = "";
+            }
+            Pattern p = Pattern.compile("[^ \\n]*" + spelling + "[^ \\n]*");
+            Matcher m = p.matcher(sample);
+            StringBuffer sb = new StringBuffer();
+            while (m.find()) {
+                m.appendReplacement(sb, "<i>" + m.group()+ "</i>");
+            }
+            m.appendTail(sb);
+            sample = "<font color=\"#000000\">" + sb.toString().replaceAll(" — ", "</font><br>")
+                    .replaceAll("\\n", "<br><br><font color=\"#000000\">");
+            samplesView.setText(Html.fromHtml(sample));
             rootView.findViewById(R.id.clickableContainer).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ((ContainerFragment) getParentFragment()).flipCard(getArguments().getInt("position"), true);
+                    ((ContainerFragment) getParentFragment()).flipCard(getArguments().getInt(CardsActivity.POSITION));
                 }
             });
             rootView.findViewById(R.id.samples).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ((ContainerFragment) getParentFragment()).flipCard(getArguments().getInt("position"), true);
+                    ((ContainerFragment) getParentFragment()).flipCard(getArguments().getInt(CardsActivity.POSITION));
                 }
             });
         }

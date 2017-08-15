@@ -30,7 +30,7 @@ public class CardFrontFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_card_front, container, false);
         parentActivity = ((CardsActivity) getActivity());
         ArrayList<Word> words = parentActivity.words;
-        int position = getArguments().getInt("position");
+        int position = getArguments().getInt(CardsActivity.POSITION);
         speaker = (ImageButton) rootView.findViewById(R.id.imageSpeakerBig);
         spelling = words.get(position).getSpelling();
         speaker.setOnClickListener(new View.OnClickListener() {
@@ -41,27 +41,25 @@ public class CardFrontFragment extends Fragment {
         });
         TextView spellingView = (TextView) rootView.findViewById(R.id.spelling);
         spellingView.setText(spelling);
-        String definitions = words.get(position).getDefinitions();
-        if (definitions == null) {
-            spellingView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
-            definitions = "";
-        } else definitions = definitions.replaceAll("\\n", "\n\n");
-        ((TextView) rootView.findViewById(R.id.definitions)).setText(definitions);
-        if (getArguments().getInt("type") == 1) {
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-            lp.setMargins(0, 0, 0, 60);
-            rootView.findViewById(R.id.margin50).setLayoutParams(lp);
+        if (getArguments().getInt(CardsActivity.TYPE) == 1) {
+            String definitions = words.get(position).getDefinitions();
+            if (definitions == null) {
+                spellingView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
+                definitions = "";
+            } else definitions = definitions.replaceAll("\\n", "\n\n");
+            ((TextView) rootView.findViewById(R.id.definitions)).setText(definitions);
             rootView.findViewById(R.id.clickableContainer).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ((ContainerFragment) getParentFragment()).flipCard(getArguments().getInt("position"), false);
+                    ((ContainerFragment) getParentFragment()).flipCard(getArguments()
+                            .getInt(CardsActivity.POSITION));
                 }
             });
             rootView.findViewById(R.id.definitions).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ((ContainerFragment) getParentFragment()).flipCard(getArguments().getInt("position"), false);
+                    ((ContainerFragment) getParentFragment()).flipCard(getArguments()
+                            .getInt(CardsActivity.POSITION));
                 }
             });
         }

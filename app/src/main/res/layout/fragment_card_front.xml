@@ -22,6 +22,7 @@
         android:id="@+id/margin50"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginBottom="60dp"
         android:gravity="center"
         android:orientation="vertical">
 
@@ -46,7 +47,6 @@
                 android:id="@+id/definitions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="TextView"
                 android:layout_marginLeft="4dp"
                 android:textColor="@color/black"
                 android:textSize="17sp" />

@@ -144,10 +144,15 @@ public class WordsHelper {
                 null, WordsContract.WordsEntry.WORD_RANK, rankList.toArray(new String[rankList.size()]), null));
     }
 
-    public static void success(Context context, int rank, Date date) {
+    public static void missedDay(Context context) {
+        ArrayList<Word> words = getWords(context, MainActivity.BIG_REPETITION, null);
+        for (Word word : words) fail(context, word);
+    }
+
+    public static void success(Context context, Word word) {
         long dayStart = PreferenceManager.getDefaultSharedPreferences(context)
                 .getLong(context.getString(R.string.last_day_start), 0);
-        long time = date.getTime() + 86400000 * 14;
+        long time = word.getDate().getTime() + 86400000 * 14;
         if (time > dayStart && time < dayStart + 86400000) {
             PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(context
                     .getString(R.string.on_learning), MainActivity
@@ -159,30 +164,30 @@ public class WordsHelper {
                     .getString(R.string.vocabulary), MainActivity
                     .getPreference(context, R.string.vocabulary, 0) + 1).apply();
         }
-        time = date.getTime() + 86400000 * 60;
+        time = word.getDate().getTime() + 86400000 * 60;
         if (time > dayStart && time < dayStart + 86400000) {
             ContentValues cv = new ContentValues();
             cv.put(WordsContract.WordsEntry.WORD_IS_KNOWN, 1);
             context.getContentResolver().update(WordsContract.WordsEntry.CONTENT_URI, cv,
-                    WordsContract.WordsEntry.WORD_RANK, new String[]{String.valueOf(rank)});
+                    WordsContract.WordsEntry.WORD_RANK, new String[]{String.valueOf(word.getRank())});
         }
     }
 
-    public static void fail(Context context, int rank, Date date) {
+    public static void fail(Context context, Word word) {
         long dayStart = PreferenceManager.getDefaultSharedPreferences(context)
                 .getLong(context.getString(R.string.last_day_start), 0);
         int[] a = new int[]{1, 3, 7, 14, 30, 60};
         for (int i = 0; i < a.length; i++) {
-            long time = date.getTime() + 86400000 * a[i];
+            long time = word.getDate().getTime() + 86400000 * a[i];
             if (time > dayStart && time < dayStart + 86400000) {
                 ContentValues cv = new ContentValues();
                 long newTime;
-                if (i != 0) newTime = date.getTime() + 86400000 * (a[i] - a[i - 1] + 1);
-                else newTime = date.getTime() + 86400000;
+                if (i != 0) newTime = word.getDate().getTime() + 86400000 * (a[i] - a[i - 1] + 1);
+                else newTime = word.getDate().getTime() + 86400000;
                 cv.put(WordsContract.WordsEntry.WORD_DATE, new SimpleDateFormat("dd MMM yy HH:mm:ss z", Locale.US)
                         .format(new Date(newTime)).toUpperCase());
                 context.getContentResolver().update(WordsContract.WordsEntry.CONTENT_URI, cv,
-                        WordsContract.WordsEntry.WORD_RANK, new String[]{String.valueOf(rank)});
+                        WordsContract.WordsEntry.WORD_RANK, new String[]{String.valueOf(word.getRank())});
             }
         }
     }

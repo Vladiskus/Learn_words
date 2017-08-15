@@ -33,14 +33,16 @@ public class CardsActivity extends AppCompatActivity {
 
     public CustomViewPager mPager;
     public PagerAdapter mPagerAdapter;
-    public ViewPager.OnPageChangeListener pageChangeListener;
+    private ViewPager.OnPageChangeListener pageChangeListener;
     public ArrayList<Word> words;
     public SoundHelper soundHelper;
     public int number;
     public String primeType;
-    Context mContext;
-    ProgressBar progressBar;
-    public static ArrayList<Integer> markList = new ArrayList<>();
+    private ProgressBar progressBar;
+    public ArrayList<Integer> markList = new ArrayList<>();
+
+    public static final String TYPE = "type";
+    public static final String POSITION = "position";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,8 +67,7 @@ public class CardsActivity extends AppCompatActivity {
         mPager = (CustomViewPager) findViewById(R.id.pager);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         progressBar.setMax(10000);
-        mContext = this;
-        words = getIntent().getExtras().getParcelableArrayList("words");
+        words = getIntent().getExtras().getParcelableArrayList(MainActivity.EXTRA_WORDS);
         number = words.size();
         for (int i = 0; i < number; i++) {
             markList.add(1);
@@ -93,7 +94,7 @@ public class CardsActivity extends AppCompatActivity {
                 if (fragment instanceof ContainerFragment && primeType.equals(MainActivity.LEARN_NEW)) {
                     mPager.setPagingEnabled(true);
                 } else mPager.setPagingEnabled(false);
-                if (MainActivity.getPreference(mContext, R.string.audio, 1) == 1) {
+                if (MainActivity.getPreference(CardsActivity.this, R.string.audio, 1) == 1) {
                     if (fragment instanceof ContainerFragment)
                         ((ContainerFragment) fragment).makeSound(200, 0);
                     if (fragment instanceof WritingFragment)
@@ -119,57 +120,57 @@ public class CardsActivity extends AppCompatActivity {
         mPagerAdapter = new FragmentStatePagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
-                int type = MainActivity.getPreference(mContext, R.string.small_repetition, 0);
+                int type = MainActivity.getPreference(CardsActivity.this, R.string.small_repetition, 0);
                 Bundle args = new Bundle();
                 Fragment fragment = new Fragment();
                 switch (primeType) {
                     case MainActivity.LEARN_NEW:
                         if (position < number) {
-                            args.putInt("position", position);
-                            args.putInt("type", 1);
+                            args.putInt(POSITION, position);
+                            args.putInt(TYPE, 1);
                             fragment = new ContainerFragment();
                         }
                         if (position == number) {
-                            args.putInt("type", 11);
+                            args.putInt(TYPE, 11);
                             fragment = new RewardFragment();
                         }
                         if (position > number && position < number * 2 + 1) {
-                            args.putInt("position", position - number - 1);
+                            args.putInt(POSITION, position - number - 1);
                             fragment = new WritingFragment();
                         }
                         if (position == number * 2 + 1) {
-                            args.putInt("type", 12);
+                            args.putInt(TYPE, 12);
                             fragment = new RewardFragment();
                         }
                         break;
                     case MainActivity.SMALL_REPETITION:
                         if (position < number) {
                             if (type == 1) {
-                                args.putInt("position", position);
-                                args.putInt("type", 2);
+                                args.putInt(POSITION, position);
+                                args.putInt(TYPE, 2);
                                 fragment = new ContainerFragment();
                             } else if (type == 2) {
-                                args.putInt("position", position);
-                                args.putInt("type", 3);
+                                args.putInt(POSITION, position);
+                                args.putInt(TYPE, 3);
                                 fragment = new ContainerFragment();
                             } else {
-                                args.putInt("position", position);
+                                args.putInt(POSITION, position);
                                 fragment = new WritingFragment();
                             }
                         } else {
-                            args.putInt("type", 2);
+                            args.putInt(TYPE, 2);
                             fragment = new RewardFragment();
                         }
                         break;
                     case MainActivity.BIG_REPETITION:
                         if (position < number) {
-                            args.putInt("position", position);
-                            if (MainActivity.getPreference(mContext, R.string.en_ru, 1) == 0)
-                                args.putInt("type", 3);
-                            else args.putInt("type", 2);
+                            args.putInt(POSITION, position);
+                            if (MainActivity.getPreference(CardsActivity.this, R.string.en_ru, 1) == 0)
+                                args.putInt(TYPE, 3);
+                            else args.putInt(TYPE, 2);
                             fragment = new ContainerFragment();
                         } else {
-                            args.putInt("type", 3);
+                            args.putInt(TYPE, 3);
                             fragment = new RewardFragment();
                         }
                         break;
@@ -224,7 +225,7 @@ public class CardsActivity extends AppCompatActivity {
                     intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     intent.putExtra(MainActivity.EXTRA_PRIME_TYPE, MainActivity.LEARN_NEW);
                     intent.putExtra(MainActivity.EXTRA_WORDS, words);
-                    intent.setClass(mContext, SelectionActivity.class);
+                    intent.setClass(CardsActivity.this, SelectionActivity.class);
                     NavUtils.navigateUpTo(this, intent);
                     return true;
                 } else {

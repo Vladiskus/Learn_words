@@ -29,6 +29,7 @@ public class NotificationsReceiver extends BroadcastReceiver {
         NotificationCompat.Builder mBuilder;
         switch (primeType) {
             case MainActivity.LEARN_NEW:
+                if (MainActivity.getPreference(context, R.string.learn_new, 0) == 1) return;
                 intent.setClass(context, SelectionActivity.class);
                 mBuilder = new NotificationCompat.Builder(context)
                         .setSmallIcon(R.drawable.web_hi_res_512)
@@ -36,6 +37,8 @@ public class NotificationsReceiver extends BroadcastReceiver {
                         .setContentText(context.getString(R.string.text1));
                 break;
             case MainActivity.SMALL_REPETITION:
+                if (MainActivity.getPreference(context, R.string.small_repetition, 0)
+                        != arg.getExtras().getInt(CardsActivity.TYPE)) return;
                 intent.setClass(context, CardsActivity.class);
                 mBuilder = new NotificationCompat.Builder(context)
                         .setSmallIcon(R.drawable.web_hi_res_512)
@@ -43,6 +46,7 @@ public class NotificationsReceiver extends BroadcastReceiver {
                         .setContentText(context.getString(R.string.text2));
                 break;
             case MainActivity.BIG_REPETITION:
+                if (MainActivity.getPreference(context, R.string.big_repetition, 0) == 1) return;
                 intent.setClass(context, CardsActivity.class);
                 mBuilder = new NotificationCompat.Builder(context)
                         .setSmallIcon(R.drawable.web_hi_res_512)

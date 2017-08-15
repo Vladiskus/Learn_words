@@ -172,7 +172,6 @@ public class DataBaseFiller {
                 word.setKnown(false);
                 word.setDate(new Date());
                 WordsHelper.addWordToDataBase(word, mContext);
-                Log.e("words", word.getRank() +  word.getSpelling());
             }
         }
     }

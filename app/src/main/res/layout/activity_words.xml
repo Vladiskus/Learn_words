@@ -36,6 +36,7 @@
                 android:layout_marginRight="2dp"
                 android:entries="@array/multipliers"
                 android:popupBackground="@color/lightGray"
+                android:popupTheme="@android:style/ThemeOverlay.Material.Light"
                 android:background="?selectableItemBackgroundBorderless"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent" />

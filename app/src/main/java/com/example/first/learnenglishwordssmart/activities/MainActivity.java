@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -31,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String DB_URL = "https://dl.dropboxusercontent.com/s/qsgbqcbkfaih1y7/" +
             "words_database.db?dl=0";
 
-    public static final String EXTRA_PRIME_TYPE = "prime_type";
-    public static final String EXTRA_WORDS = "words";
+    public static final String EXTRA_PRIME_TYPE = "extra_prime_type";
+    public static final String EXTRA_WORDS = "extra_words";
     public static final String GAME = "game";
     public static final String LEARN_NEW = "learnNew";
     public static final String SMALL_REPETITION = "small_repetition";
@@ -102,50 +103,53 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
         if (isDownloaded) init();
     }
 
     public void init() {
-        words1 = WordsHelper.getWords(MainActivity.this, LEARN_NEW, null);
-        words2 = WordsHelper.getWords(MainActivity.this, SMALL_REPETITION, null);
-        words3 = WordsHelper.getWords(MainActivity.this, BIG_REPETITION, null);
         Calendar calStart = new GregorianCalendar();
         calStart.setTime(new Date());
         int hours = calStart.get(Calendar.HOUR_OF_DAY);
-        calStart.set(Calendar.HOUR_OF_DAY, getPreference(this, R.string.day_start, 0));
+        calStart.set(Calendar.HOUR_OF_DAY, getPreference(this, R.string.day_start, 2));
         calStart.set(Calendar.MINUTE, 0);
         calStart.set(Calendar.SECOND, 0);
         calStart.set(Calendar.MILLISECOND, 0);
         Date dayStart;
-        if (hours >= getPreference(this, R.string.day_start, 2))
+        if (hours >= getPreference(this, R.string.day_start, 2)) {
             dayStart = calStart.getTime();
+        }
         else dayStart = new Date(calStart.getTimeInMillis() - 86400000);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (dayStart.getTime() > sharedPreferences.getLong(this.getString(R.string.last_day_start), 0)) {
+            if (getPreference(this, R.string.big_repetition, 0) == 0) WordsHelper.missedDay(this);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putLong(getString(R.string.last_day_start), dayStart.getTime());
             editor.putInt(getString(R.string.small_repetition), 0);
             editor.putInt(getString(R.string.big_repetition), 0);
             editor.putInt(getString(R.string.learn_new), 0);
-            editor.apply();
-            turnOnButton(findViewById(R.id.smallRepetition));
-            turnOnButton(findViewById(R.id.bigRepetition));
-            turnOnButton(findViewById(R.id.learnNew));
+            editor.commit();
         }
+        words1 = WordsHelper.getWords(MainActivity.this, LEARN_NEW, null);
+        words2 = WordsHelper.getWords(MainActivity.this, SMALL_REPETITION, null);
+        words3 = WordsHelper.getWords(MainActivity.this, BIG_REPETITION, null);
         setStats();
-        if (getPreference(this, R.string.vocabulary, 0) == 0)
-            turnOffButton(findViewById(R.id.learnNew));
-        else turnOnButton(findViewById(R.id.learnNew));
-        if (getPreference(this, R.string.learn_new, 0) == 1)
-            turnOffButton(findViewById(R.id.learnNew));
-        if (getPreference(this, R.string.small_repetition, 0) == 4 || words2.size() == 0)
-            turnOffButton(findViewById(R.id.smallRepetition));
-        if (getPreference(this, R.string.big_repetition, 0) == 1 || words3.size() == 0)
-            turnOffButton(findViewById(R.id.bigRepetition));
-        else ((Button) findViewById(R.id.bigRepetition))
-                .setText(String.format(getString(R.string.big_repetition), getResources().getQuantityString(R.plurals.words, words3.size(), words3.size())));
+        checkButton(getPreference(this, R.string.vocabulary, 0) == 0 ||
+                getPreference(this, R.string.learn_new, 0) == 1, findViewById(R.id.learnNew));
+        checkButton(getPreference(this, R.string.small_repetition, 0) == 4 || words2.size() == 0,
+                findViewById(R.id.smallRepetition));
+        checkButton(getPreference(this, R.string.big_repetition, 0) == 1 || words3.size() == 0,
+                findViewById(R.id.bigRepetition));
+        }
+
+    private void checkButton(boolean isForbidden, View button) {
+        if (isForbidden) button.setBackgroundResource(R.drawable.inactive_button);
+        else button.setBackgroundResource(R.drawable.button);
+        button.setClickable(!isForbidden);
+        if (!isForbidden && button.getId() == R.id.bigRepetition) ((Button) button)
+                .setText(String.format(getString(R.string.big_repetition), getResources()
+                        .getQuantityString(R.plurals.words, words3.size(), words3.size())));
     }
 
     private void setStats() {
@@ -173,18 +177,6 @@ public class MainActivity extends AppCompatActivity {
     public static int getPreference(Context context, int path, int def) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getInt(context.getString(path), def);
-    }
-
-    private void turnOffButton(View view) {
-        view.setClickable(false);
-        view.setBackgroundResource(R.drawable.inactive_button);
-    }
-
-    private void turnOnButton(View view) {
-        if (view.getId() != R.id.smallRepetition) {
-            view.setClickable(true);
-            view.setBackgroundResource(R.drawable.button);
-        }
     }
 
     @Override

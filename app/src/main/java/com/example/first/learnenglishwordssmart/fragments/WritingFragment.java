@@ -51,10 +51,10 @@ public class WritingFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_writing, container, false);
         GridView gridView = (GridView) rootView.findViewById(R.id.gridView);
         wordView = (TextView) rootView.findViewById(R.id.word);
-        position = getArguments().getInt("position");
+        position = getArguments().getInt(CardsActivity.POSITION);
         parentActivity = (CardsActivity) getActivity();
         ArrayList<Word> words = parentActivity.words;
-        int position = getArguments().getInt("position");
+        int position = getArguments().getInt(CardsActivity.POSITION);
         spelling = words.get(position).getSpelling();
         AutofitHelper.create(wordView);
         difference = (spelling.length() > 15) ? spelling.length() - 15 : 0;
@@ -150,7 +150,7 @@ public class WritingFragment extends Fragment {
         if (wordView.getText().charAt(wordView.getText().length() - 1) ==
                 spelling.charAt(spelling.length() - 1)) {
             if (errors > (spelling.length() - difference) / 2)
-                CardsActivity.markList.set(position, 0);
+                ((CardsActivity) getActivity()).markList.set(position, 0);
             if (parentActivity.primeType.equals(MainActivity.LEARN_NEW))
                 parentActivity.mPager.setCurrentItem(position + 2 + MainActivity
                         .getPreference(parentActivity, R.string.number_of_words, 10), true);
