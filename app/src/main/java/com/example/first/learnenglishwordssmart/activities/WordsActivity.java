@@ -1,17 +1,17 @@
 package com.example.first.learnenglishwordssmart.activities;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,6 +22,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.providers.WordsHelper;
@@ -35,7 +36,6 @@ import me.grantland.widget.AutofitHelper;
 public class WordsActivity extends AppCompatActivity {
 
     private ArrayList<String> words;
-    private VocabularyFragment fragment;
     private RelativeLayout mRelativeLayout;
     private ArrayList<Integer> assessments = new ArrayList<>();
     private ArrayList<Integer> primeRanks = new ArrayList<>();
@@ -54,14 +54,15 @@ public class WordsActivity extends AppCompatActivity {
     private double realRatio = 1;
     private int backStepCount = 1;
     private double requiredRatio;
+    private boolean isPaused = false;
+    private boolean isStarted = false;
     private transient boolean isForbidden = false;
-    private boolean isStopped = false;
-    private boolean beginner = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_words);
+        AutofitHelper.create((TextView) findViewById(R.id.tip));
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -89,16 +90,81 @@ public class WordsActivity extends AppCompatActivity {
         });
         primeType = getIntent().getExtras().getString(MainActivity.EXTRA_PRIME_TYPE);
         mRelativeLayout = (RelativeLayout) findViewById(R.id.relative_layout);
+        if (primeType.equals(MainActivity.GAME))
+            getSupportActionBar().setTitle(R.string.game_title0);
+        else getSupportActionBar().setTitle(R.string.game_title1);
         if (savedInstanceState == null) {
             isForbidden = true;
-            if (primeType.equals(MainActivity.GAME)) {
-                getSupportActionBar().setTitle(R.string.game_title0);
-                fragment = new VocabularyFragment();
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragmentContainer, fragment).commit();
-            } else getSupportActionBar().setTitle(R.string.game_title1);
+            new LoadTask(this).execute();
+        } else {
+            words = savedInstanceState.getStringArrayList("words");
+            knownWords = savedInstanceState.getStringArrayList("knownWords");
+            assessments = savedInstanceState.getIntegerArrayList("assessments");
+            primeRanks = savedInstanceState.getIntegerArrayList("primeRanks");
+            count = savedInstanceState.getInt("count");
+            multiplier = savedInstanceState.getInt("multiplier");
+            backStepCount = savedInstanceState.getInt("backStepCount");
+            realRatio = savedInstanceState.getDouble("realRatio");
+            requiredRatio = savedInstanceState.getDouble("requiredRatio");
+            isPaused = savedInstanceState.getBoolean("isPaused");
+            isForbidden = savedInstanceState.getBoolean("isForbidden");
+            isStarted = savedInstanceState.getBoolean("isStarted");
+            invalidateOptionsMenu();
         }
-        new LoadTask(this).execute();
+        if (!isStarted) getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragmentContainer, new VocabularyFragment(), "1").commit();
+        else if (!isPaused) ready();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putStringArrayList("words", words);
+        outState.putStringArrayList("knownWords", knownWords);
+        outState.putIntegerArrayList("assessments", assessments);
+        outState.putIntegerArrayList("primeRanks", primeRanks);
+        outState.putInt("count", count);
+        outState.putInt("multiplier", multiplier);
+        outState.putInt("backStepCount", backStepCount);
+        outState.putDouble("realRatio", realRatio);
+        outState.putDouble("requiredRatio", requiredRatio);
+        outState.putBoolean("isPaused", isPaused);
+        outState.putBoolean("isStarted", isStarted);
+        outState.putBoolean("isForbidden", isForbidden);
+        super.onSaveInstanceState(outState);
+    }
+
+    public void setVocabulary(View view) {
+        multiplier = 20;
+        switch (view.getId()) {
+            case R.id.beginner:
+                vocabulary = 500;
+                break;
+            case R.id.elementary:
+                vocabulary = 1000;
+                break;
+            case R.id.pre_intermediate:
+                vocabulary = 1500;
+                break;
+            case R.id.intermediate:
+                vocabulary = 2000;
+                break;
+            case R.id.upper_intermediate:
+                vocabulary = 3000;
+                break;
+            case R.id.advanced:
+                vocabulary = 4000;
+                break;
+            case R.id.proficient:
+                vocabulary = 6000;
+                break;
+            default:
+                vocabulary = 0;
+                break;
+        }
+        count = (vocabulary > length * multiplier) ? vocabulary - length * multiplier : 0;
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag("1");
+        fragment.getView().findViewById(R.id.choose).setVisibility(View.GONE);
+        fragment.getView().findViewById(R.id.tip).setVisibility(View.VISIBLE);
     }
 
     private void setDuration(int position) {
@@ -149,7 +215,7 @@ public class WordsActivity extends AppCompatActivity {
                 activity.requiredRatio = 1 - (double) MainActivity
                         .getPreference(activity, R.string.number_of_words, 10) / 50;
                 activity.words = WordsHelper.getWordsSpelling(activity, (activity.primeType
-                        .equals(MainActivity.GAME)) ? null : String.valueOf((int) (2 * 8 * MainActivity
+                        .equals(MainActivity.GAME)) ? null : String.valueOf((int) (2 * 10 * MainActivity
                         .getPreference(activity, R.string.number_of_words, 10) / (1 - activity.requiredRatio))), null);
             }
             return null;
@@ -159,11 +225,8 @@ public class WordsActivity extends AppCompatActivity {
         protected void onPostExecute(Void voids) {
             WordsActivity activity = weakActivity.get();
             if (activity != null) {
-                if (!activity.primeType.equals(MainActivity.GAME)) activity.isForbidden = false;
                 if (!activity.isForbidden) {
-                    activity.findViewById(R.id.roundProgressBar).setVisibility(View.GONE);
-                    activity.startFalling();
-                    activity.fall();
+                    activity.ready();
                 } else activity.isForbidden = false;
             }
         }
@@ -180,19 +243,15 @@ public class WordsActivity extends AppCompatActivity {
                     return;
                 }
                 if (primeType.equals(MainActivity.GAME)) {
-                    if (realRatio > 0.5 || assessments.size() < length) fall();
-                    else if (assessments.size() >= length)
-                        new EndTask(WordsActivity.this).execute();
-                    if (assessments.size() == length && realRatio < requiredRatio && !beginner) {
-                        if (vocabulary <= backStepCount * length * multiplier) {
-                            beginner = true;
-                            return;
-                        }
+                    if (assessments.size() == length && realRatio < requiredRatio
+                            && vocabulary > backStepCount * length * multiplier) {
                         backStepCount++;
                         count = (vocabulary > backStepCount * length * multiplier) ?
                                 vocabulary - backStepCount * length * multiplier : 0;
                         assessments.clear();
                     }
+                    if (realRatio > 0.5 || assessments.size() < length) fall();
+                    else new EndTask(WordsActivity.this).execute();
                 } else {
                     if (assessments.size() - knownWords.size() < 8 *
                             MainActivity.getPreference(WordsActivity.this, R.string.number_of_words, 10))
@@ -220,14 +279,14 @@ public class WordsActivity extends AppCompatActivity {
                 }
                 realRatio = sum / ((assessments.size() >= length) ? length : assessments.size());
                 if (primeType.equals(MainActivity.GAME)) {
-                    double a = 20000 * (1 - realRatio);
+                    double a = realRatio >= 0.5 ? 20000 * (1 - realRatio) : 20000 * realRatio;
                     double b = 100 * assessments.size();
-                    double c = realRatio >= 0.5 ? a : b + (a - b) / 2 * (1 - assessments.size() / length);
-                    animate((int) (assessments.size() > length ? c : c * assessments.size() / length));
+                    double c = realRatio >= 0.5 ? a : b + (a - b) / 2 * (1 - (double) assessments.size() / length);
+                    animate((int) (assessments.size() > length ? c : c * (double) assessments.size() / length));
                 } else animate(10000 * (assessments.size() - knownWords.size()) / 8 /
                         MainActivity.getPreference(WordsActivity.this, R.string.number_of_words, 10));
                 if (assessments.size() >= length && realRatio == requiredRatio)
-                    primeRanks.add(count - (length / 2 + 3) * multiplier);
+                    primeRanks.add(count - (int) (length * (1 - realRatio)) * multiplier);
                 mRelativeLayout.removeView(view);
                 animators.remove(0);
                 removeRunnables.remove(this);
@@ -274,18 +333,20 @@ public class WordsActivity extends AppCompatActivity {
             WordsActivity activity = weakActivity.get();
             if (activity != null) {
                 int rank;
+                WordsHelper.setAreKnown(activity, activity.knownWords);
                 if (activity.primeType.equals(MainActivity.GAME)) {
+                    activity.vocabulary = activity.count - (int) (activity.length * (1 - activity.realRatio))
+                            * activity.multiplier + MainActivity.getPreference(activity,
+                            R.string.last_rank, 12522) - activity.words.size();
+                    PreferenceManager.getDefaultSharedPreferences(activity)
+                            .edit().putInt(activity.getString(R.string.vocabulary), activity.vocabulary).apply();
+                    if (MainActivity.getPreference(activity, R.string.vocabulary, 0) != 0) return null;
                     if (activity.primeRanks.size() != 0) rank = (activity.primeRanks.get(0) +
                             activity.primeRanks.get(activity.primeRanks.size() - 1)) / 2;
                     else rank = 1;
                     WordsHelper.setAreKnown(activity, rank);
-                    activity.vocabulary = activity.count - (activity.length / 2 + 3)
-                            * activity.multiplier + 12522 - activity.words.size();
-                    PreferenceManager.getDefaultSharedPreferences(activity)
-                            .edit().putInt(activity.getString(R.string.vocabulary), activity.vocabulary).apply();
-                } else
-                    rank = MainActivity.getPreference(activity, R.string.current_position, 1) + activity.count;
-                WordsHelper.setAreKnown(activity, activity.knownWords);
+                } else rank = MainActivity.getPreference(activity, R.string.current_position, 1) +
+                        activity.count;
                 PreferenceManager.getDefaultSharedPreferences(activity).edit()
                         .putInt(activity.getString(R.string.current_position), rank).apply();
             }
@@ -309,27 +370,24 @@ public class WordsActivity extends AppCompatActivity {
         }
     }
 
-    public void setVocabulary(View view) {
-        if (view.getId() == R.id.beginner) vocabulary = 500;
-        if (view.getId() == R.id.elementary) vocabulary = 1000;
-        if (view.getId() == R.id.pre_intermediate) vocabulary = 1500;
-        if (view.getId() == R.id.intermediate) vocabulary = 2000;
-        if (view.getId() == R.id.upper_intermediate) vocabulary = 3000;
-        if (view.getId() == R.id.advanced) vocabulary = 4000;
-        if (view.getId() == R.id.proficient) vocabulary = 6000;
-        multiplier = 20;
-        count = (vocabulary > length * multiplier) ? vocabulary - length * multiplier : 0;
-        fragment.getView().findViewById(R.id.choose).setVisibility(View.GONE);
-        fragment.getView().findViewById(R.id.tip).setVisibility(View.VISIBLE);
+    public void start(View view) {
+        getSupportFragmentManager().beginTransaction().remove(getSupportFragmentManager()
+                .findFragmentByTag("1")).commit();
+        if (!isForbidden) ready();
+        else {
+            isForbidden = false;
+            findViewById(R.id.roundProgressBar).setVisibility(View.VISIBLE);
+        }
+        isStarted = true;
     }
 
-    public void start(View view) {
-        getSupportFragmentManager().beginTransaction().remove(fragment).commit();
-        if (!isForbidden) {
-            findViewById(R.id.roundProgressBar).setVisibility(View.GONE);
+    private void ready() {
+        try {
             startFalling();
             fall();
-        } else isForbidden = false;
+        } catch (IndexOutOfBoundsException e) {
+            new EndTask(WordsActivity.this).execute();
+        }
     }
 
     private void pause() {
@@ -340,7 +398,7 @@ public class WordsActivity extends AppCompatActivity {
         }
         for (Runnable runnable : fallRunnables) fallHandler.removeCallbacks(runnable);
         fallRunnables.clear();
-        isStopped = !isStopped;
+        isPaused = !isPaused;
     }
 
     private void resume() {
@@ -349,21 +407,15 @@ public class WordsActivity extends AppCompatActivity {
                 objectAnimator.resume();
             remove((View) objectAnimator.getTarget());
         }
-        startFalling();
-        fall();
-        isStopped = !isStopped;
+        ready();
+        isPaused = !isPaused;
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        if (!isForbidden) pause();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (!isForbidden) resume();
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.stop_or_resume).setIcon(isPaused ?
+                R.drawable.ic_play_white_24dp : R.drawable.ic_pause_white_24dp);
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -371,7 +423,7 @@ public class WordsActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.stop_or_resume:
                 if (!isForbidden) {
-                    if (isStopped) {
+                    if (isPaused) {
                         resume();
                         item.setIcon(R.drawable.ic_pause_white_24dp);
                     } else {

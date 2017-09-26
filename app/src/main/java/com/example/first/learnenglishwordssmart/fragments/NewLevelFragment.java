@@ -25,12 +25,6 @@ public class NewLevelFragment extends Fragment {
                 getFragmentManager().popBackStack();
             }
         });
-        rootView.findViewById(R.id.clickableContainer).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getFragmentManager().popBackStack();
-            }
-        });
         return rootView;
     }
 

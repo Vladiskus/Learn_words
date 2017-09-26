@@ -14,10 +14,6 @@ import com.example.first.learnenglishwordssmart.activities.MainActivity;
 import com.example.first.learnenglishwordssmart.activities.SelectionActivity;
 import com.example.first.learnenglishwordssmart.providers.WordsHelper;
 
-/**
- * Created by Vlad on 18-Mar-17.
- */
-
 public class NotificationsReceiver extends BroadcastReceiver {
 
     @Override

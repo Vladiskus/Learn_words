@@ -29,7 +29,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:scaleType="center"
-            app:srcCompat="@drawable/star_linear" />
+            app:srcCompat="@drawable/star_filled" />
 
         <ImageView
             android:id="@+id/star2"
@@ -37,7 +37,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:scaleType="center"
-            app:srcCompat="@drawable/star_linear" />
+            app:srcCompat="@drawable/star_filled" />
 
         <ImageView
             android:id="@+id/star3"
@@ -45,7 +45,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:scaleType="center"
-            app:srcCompat="@drawable/star_linear" />
+            app:srcCompat="@drawable/star_filled" />
     </LinearLayout>
 
     <TextView
@@ -64,7 +64,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:gravity="center"
-        android:text="@string/reward"
+        android:text="+XP"
         android:textColor="@color/black"
         android:textSize="30sp" />
 

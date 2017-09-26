@@ -28,6 +28,8 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import me.grantland.widget.AutofitHelper;
+
 public class SelectionActivity extends AppCompatActivity {
 
     private ViewGroup container;
@@ -37,11 +39,13 @@ public class SelectionActivity extends AppCompatActivity {
     private ArrayList<Word> words;
     public ArrayList<String> wordsSpelling = new ArrayList<>();
     private int number;
+    private static boolean isReversed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_selection);
+        AutofitHelper.create((TextView) findViewById(R.id.choosing));
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -49,10 +53,6 @@ public class SelectionActivity extends AppCompatActivity {
         soundHelper = new SoundHelper(this);
         number = MainActivity.getPreference(this, R.string.number_of_words, 10);
         primeType = getIntent().getExtras().getString(MainActivity.EXTRA_PRIME_TYPE);
-        words = getIntent().getExtras().getParcelableArrayList(MainActivity.EXTRA_WORDS);
-        for (Word word : words) {
-            wordsSpelling.add(word.getSpelling());
-        }
         numberButton = (Button) findViewById(R.id.numberButton);
         numberButton.setText(String.valueOf(number));
         numberButton.setOnClickListener(new View.OnClickListener() {
@@ -67,7 +67,10 @@ public class SelectionActivity extends AppCompatActivity {
         findViewById(R.id.continueButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Collections.reverse(words);
+                if (!isReversed) {
+                    Collections.reverse(words);
+                    isReversed = true;
+                }
                 Intent intent = new Intent();
                 intent.putExtra(MainActivity.EXTRA_PRIME_TYPE, primeType);
                 intent.putExtra(MainActivity.EXTRA_WORDS, words);
@@ -101,6 +104,8 @@ public class SelectionActivity extends AppCompatActivity {
                 .getInt(getString(R.string.number_of_words_old), 0);
         numberButton.setText(String.valueOf(number));
         words = WordsHelper.getWords(this, primeType, null);
+        isReversed = false;
+        for (Word word : words) wordsSpelling.add(word.getSpelling());
         if (number > oldNumber) {
             for (int i = oldNumber; i < words.size(); i++) {
                 addWord(words.get(i).getSpelling(), words.get(i).getTranslation(), 0);

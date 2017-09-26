@@ -2,6 +2,7 @@ package com.example.first.learnenglishwordssmart.providers;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.preference.PreferenceManager;
 
@@ -128,9 +129,11 @@ public class WordsHelper {
             if (MainActivity.getPreference(context, R.string.small_repetition, 0) != 4 &&
                     wordDate.getTime() > dayStart) c = true;
             int[] a = new int[]{1, 3, 7, 14, 30, 60};
-            for (int i = 0; i < a.length; i++) {
-                long time = wordDate.getTime() + 86400000 * a[i];
-                if (time > dayStart && time < dayStart + 86400000) c = true;
+            for (int j = 0; j <= MainActivity.getPreference(context, R.string.days_missed, 0); j++){
+                for (int i = 0; i < a.length; i++) {
+                    long time = wordDate.getTime() + 86400000 * (a[i] + j);
+                    if (time > dayStart && time < dayStart + 86400000) c = true;
+                }
             }
             if ((primeType.equals(MainActivity.SMALL_REPETITION) && wordDate.getTime() > dayStart) ||
                     (primeType.equals(MainActivity.BIG_REPETITION) && c)) {
@@ -145,8 +148,14 @@ public class WordsHelper {
     }
 
     public static void missedDay(Context context) {
-        ArrayList<Word> words = getWords(context, MainActivity.BIG_REPETITION, null);
-        for (Word word : words) fail(context, word);
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(context
+                .getString(R.string.days_missed), MainActivity.getPreference(context,
+                R.string.days_missed, 0) + 1).apply();
+    }
+
+    public static void missedDaysLearned(Context context) {
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(context
+                .getString(R.string.days_missed), 0).apply();
     }
 
     public static void success(Context context, Word word) {
@@ -154,17 +163,18 @@ public class WordsHelper {
                 .getLong(context.getString(R.string.last_day_start), 0);
         long time = word.getDate().getTime() + 86400000 * 14;
         if (time > dayStart && time < dayStart + 86400000) {
-            PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(context
+            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+            editor.putInt(context
                     .getString(R.string.on_learning), MainActivity
-                    .getPreference(context, R.string.on_learning, 0) - 1).apply();
-            PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(context
-                    .getString(R.string.learned), MainActivity
-                    .getPreference(context, R.string.learned, 0) + 1).apply();
-            PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(context
-                    .getString(R.string.vocabulary), MainActivity
-                    .getPreference(context, R.string.vocabulary, 0) + 1).apply();
+                    .getPreference(context, R.string.on_learning, 0) - 1)
+                    .putInt(context
+                            .getString(R.string.learned), MainActivity
+                            .getPreference(context, R.string.learned, 0) + 1)
+                    .putInt(context
+                            .getString(R.string.vocabulary), MainActivity
+                            .getPreference(context, R.string.vocabulary, 0) + 1).apply();
         }
-        time = word.getDate().getTime() + 86400000 * 60;
+        time = word.getDate().getTime() + 86400000L * 60L;
         if (time > dayStart && time < dayStart + 86400000) {
             ContentValues cv = new ContentValues();
             cv.put(WordsContract.WordsEntry.WORD_IS_KNOWN, 1);
@@ -210,7 +220,7 @@ public class WordsHelper {
         ContentValues cv = new ContentValues();
         cv.put(WordsContract.WordsEntry.WORD_IS_KNOWN, 1);
         context.getContentResolver().update(WordsContract.WordsEntry.CONTENT_URI, cv,
-                WordsContract.WordsEntry.WORD_SPELLING, words.toArray(new String[] {}));
+                WordsContract.WordsEntry.WORD_SPELLING, words.toArray(new String[]{}));
     }
 
     public static void setOnLearning(Context context, String spelling, Date date) {
@@ -219,7 +229,8 @@ public class WordsHelper {
                         .getPreference(context, R.string.on_learning, 0) + 1).apply();
         ContentValues cv = new ContentValues();
         cv.put(WordsContract.WordsEntry.WORD_IS_KNOWN, 3);
-        cv.put(WordsContract.WordsEntry.WORD_DATE, new SimpleDateFormat("dd MMM yy HH:mm:ss z", Locale.US).format(date).toUpperCase());
+        cv.put(WordsContract.WordsEntry.WORD_DATE, new SimpleDateFormat("dd MMM yy HH:mm:ss z",
+                Locale.US).format(date).toUpperCase());
         context.getContentResolver().update(WordsContract.WordsEntry.CONTENT_URI, cv,
                 WordsContract.WordsEntry.WORD_SPELLING, new String[]{spelling});
     }
@@ -233,10 +244,10 @@ public class WordsHelper {
             context.getContentResolver().update(WordsContract.WordsEntry.CONTENT_URI, cv,
                     WordsContract.WordsEntry.WORD_SPELLING, new String[]{spelling});
         else {
-            PreferenceManager.getDefaultSharedPreferences(context).edit()
-                    .putInt(context.getString(R.string.last_rank), MainActivity
-                            .getPreference(context, R.string.last_rank, 12522) + 1).apply();
-            cv.put(WordsContract.WordsEntry.WORD_RANK, MainActivity.getPreference(context, R.string.last_rank, 12522));
+            PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(context.getString(R.string.last_rank),
+                    MainActivity.getPreference(context, R.string.last_rank, 12522) + 1).apply();
+            cv.put(WordsContract.WordsEntry.WORD_RANK, MainActivity
+                    .getPreference(context, R.string.last_rank, 12522));
             context.getContentResolver().insert(WordsContract.WordsEntry.CONTENT_URI, cv);
         }
     }

@@ -81,11 +81,11 @@ public class ContainerFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
         outState.putBoolean("localTrigger1", !globalTrigger1);
         outState.putBoolean("localTrigger2", !globalTrigger2);
         outState.putBoolean("isShowingFront", isShowingFront);
         changeGlobalTrigger(1);
+        super.onSaveInstanceState(outState);
     }
 
     public void flipCard(int position) {

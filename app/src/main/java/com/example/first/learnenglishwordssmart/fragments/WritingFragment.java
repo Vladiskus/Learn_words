@@ -1,6 +1,5 @@
 package com.example.first.learnenglishwordssmart.fragments;
 
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -73,7 +72,10 @@ public class WritingFragment extends Fragment {
                 parentActivity.soundHelper.spellIt(parentActivity, spelling, speaker, 2);
             }
         });
-        ((TextView) rootView.findViewById(R.id.translation)).setText(words.get(position).getTranslation());
+        TextView translation = ((TextView) rootView.findViewById(R.id.translation));
+        translation.setText(words.get(position).getTranslation());
+        translation.setMaxLines(words.get(position).getTranslation().contains(",") ? 3 : 1);
+        AutofitHelper.create(translation);
         setWord();
         final ArrayList<Character> array = getArray();
         gridView.setAdapter(new BaseAdapter() {
@@ -129,7 +131,12 @@ public class WritingFragment extends Fragment {
                     errors = errors + 2;
                     number++;
                     setWord();
-                    checkWord();
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            checkWord();
+                        }
+                    }, 200);
                 }
             }
         });
@@ -143,7 +150,7 @@ public class WritingFragment extends Fragment {
                 button.setBackgroundColor(parentActivity.getResources().getColor(R.color.white));
                 checkWord();
             }
-        }, 300);
+        }, 200);
     }
 
     private void checkWord() {

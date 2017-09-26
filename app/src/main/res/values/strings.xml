@@ -33,6 +33,7 @@
     <string name="unknown_full">Перехватите неизвестные слова. Не дайте им достичь конца экрана.</string>
     <string name="game_title0">Поймай слова</string>
     <string name="game_title1">Отбор новых слов</string>
+    <string name="days_missed">Дней пропущено</string>
     <string name="day_start">Начало дня</string>
     <string name="current_position">Текущая позиция</string>
     <string name="last_rank">Число строк</string>

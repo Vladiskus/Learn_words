@@ -1,6 +1,7 @@
 package com.example.first.learnenglishwordssmart.fragments;
 
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -63,10 +64,11 @@ public class RewardFragment extends Fragment {
         rootView.findViewById(R.id.nextButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (type == 12) for (int i = 0; i < number; i++) WordsHelper
-                        .setOnLearning(getActivity(), words.get(i).getSpelling(), new Date());
+                if (type == 12) for (int i = 0; i < number; i++)
+                    WordsHelper.setOnLearning(getActivity(), words.get(i).getSpelling(), new Date());
                 if (type == 11) {
-                    for (int i = 0; i < number; i++) ((CardsActivity) getActivity()).markList.set(i, 1);
+                    for (int i = 0; i < number; i++)
+                        ((CardsActivity) getActivity()).markList.set(i, 1);
                     mPager.setCurrentItem(number + 1, true);
                 } else {
                     SharedPreferences.Editor editor = PreferenceManager
@@ -120,17 +122,17 @@ public class RewardFragment extends Fragment {
         int oldExp = MainActivity.getPreference(getActivity(), R.string.to_next_level, 0);
         double sum = 0;
         for (int i = 0; i < number; i++) sum += ((CardsActivity) getActivity()).markList.get(i);
+        ((ImageView) rootView.findViewById(R.id.star1)).setImageResource((R.drawable.star_linear));
+        ((ImageView) rootView.findViewById(R.id.star1)).setImageResource((R.drawable.star_linear));
+        ((ImageView) rootView.findViewById(R.id.star1)).setImageResource((R.drawable.star_linear));
         if (sum / number >= 0.4) ((ImageView) rootView.findViewById(R.id.star1))
                 .setImageResource((R.drawable.star_filled));
         if (sum / number >= 0.6) ((ImageView) rootView.findViewById(R.id.star2))
                 .setImageResource((R.drawable.star_filled));
         if (sum / number >= 0.8) ((ImageView) rootView.findViewById(R.id.star3))
                 .setImageResource((R.drawable.star_filled));
-        if (String.valueOf(type).charAt(0) == '1') {
-            sharedPreferences.edit().putInt(getString(R.string.to_next_level),
-                    (int) (number * 3 * sum / number) + oldExp).apply();
-        } else sharedPreferences.edit().putInt(getString(R.string.to_next_level),
-                (int) (number * 3 * sum / number / 2) + oldExp).apply();
+        sharedPreferences.edit().putInt(getString(R.string.to_next_level),
+                (int) (type == 11 ? sum * 2 : sum) + oldExp).apply();
         ((TextView) rootView.findViewById(R.id.reward)).setText(String.format(getActivity()
                         .getString(R.string.reward),
                 MainActivity.getPreference(getActivity(), R.string.to_next_level, 0) - oldExp));
@@ -138,12 +140,12 @@ public class RewardFragment extends Fragment {
     }
 
     private void setNotifications() {
-        Intent intent = new Intent(getActivity(), NotificationsReceiver.class);
-
+        ((NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE)).cancelAll();
         AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
         int type = MainActivity.getPreference(getActivity(), R.string.small_repetition, 0);
         if (type < 4) {
             int[] time = new int[]{900000, 3600000, 10800000};
+            Intent intent = new Intent(getActivity(), NotificationsReceiver.class);
             intent.putExtra(MainActivity.EXTRA_PRIME_TYPE, MainActivity.SMALL_REPETITION);
             intent.putExtra(CardsActivity.TYPE, type);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(),
@@ -151,6 +153,7 @@ public class RewardFragment extends Fragment {
             alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + time[type - 1], pendingIntent);
         }
         if (primeType.equals(MainActivity.LEARN_NEW) || primeType.equals(MainActivity.BIG_REPETITION)) {
+            Intent intent = new Intent(getActivity(), NotificationsReceiver.class);
             intent.putExtra(MainActivity.EXTRA_PRIME_TYPE, primeType);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(),
                     1, intent, PendingIntent.FLAG_UPDATE_CURRENT);

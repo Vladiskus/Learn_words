@@ -21,14 +21,14 @@ public class ChangeNumberFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_change_number, container, false);
         final TextView numberView = (TextView) rootView.findViewById(R.id.number);
         int number = MainActivity.getPreference(getActivity(), R.string.number_of_words, 10);
-        numberView.setText(getResources().getQuantityString(R.plurals.words, number, number));
+        numberView.setText(MainActivity.makeString(number));
         SeekBar seekBar = (SeekBar) rootView.findViewById(R.id.seekBar);
         seekBar.setProgress(number);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 int number = progress + 1;
-                numberView.setText(getResources().getQuantityString(R.plurals.words, number, number));
+                numberView.setText(MainActivity.makeString(number));
             }
 
             @Override
@@ -42,12 +42,6 @@ public class ChangeNumberFragment extends Fragment {
             }
         });
         rootView.findViewById(R.id.declineButton).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getFragmentManager().popBackStack();
-            }
-        });
-        rootView.findViewById(R.id.clickableContainer).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getFragmentManager().popBackStack();

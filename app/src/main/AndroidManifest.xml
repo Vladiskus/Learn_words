@@ -18,6 +18,7 @@
 
         <activity
             android:name=".activities.MainActivity"
+            android:screenOrientation="portrait"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,13 +27,15 @@
         </activity>
         <activity
             android:name=".activities.SelectionActivity"
+            android:screenOrientation="portrait"
             android:parentActivityName=".activities.MainActivity" />
         <activity
             android:name=".activities.CardsActivity"
+            android:screenOrientation="portrait"
             android:parentActivityName=".activities.MainActivity" />
         <activity
             android:name=".activities.WordsActivity"
-            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
             android:parentActivityName=".activities.MainActivity" />
 
         <service

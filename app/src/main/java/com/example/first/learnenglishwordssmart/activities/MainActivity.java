@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String EXTRA_PRIME_TYPE = "extra_prime_type";
     public static final String EXTRA_WORDS = "extra_words";
     public static final String GAME = "game";
-    public static final String LEARN_NEW = "learnNew";
+    public static final String LEARN_NEW = "learn_new";
     public static final String SMALL_REPETITION = "small_repetition";
     public static final String BIG_REPETITION = "big_repetition";
 
@@ -49,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        soundHelper = new SoundHelper(this);
         //DataBaseFiller.FillWordsDataBase(MainActivity.this);
         isDownloaded = new File(getFilesDir().getAbsolutePath() + "/databases/" +
                 WordsProvider.DATABASE_NAME).exists();
@@ -71,7 +70,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.learnNew).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (words1.get(0).getRank() < getPreference(MainActivity.this, R.string.current_position, 0)) {
+                if (words1.get(0).getRank() < getPreference(MainActivity.this, R.string.current_position, 0) ||
+                        words1.get(0).getRank() > 12522) {
                     intent.putExtra(EXTRA_WORDS, words1);
                     intent.setClass(MainActivity.this, SelectionActivity.class);
                 } else {
@@ -109,21 +109,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void init() {
+        soundHelper = new SoundHelper(this);
         Calendar calStart = new GregorianCalendar();
         calStart.setTime(new Date());
         int hours = calStart.get(Calendar.HOUR_OF_DAY);
-        calStart.set(Calendar.HOUR_OF_DAY, getPreference(this, R.string.day_start, 2));
+        calStart.set(Calendar.HOUR_OF_DAY, getPreference(this, R.string.day_start, 5));
         calStart.set(Calendar.MINUTE, 0);
         calStart.set(Calendar.SECOND, 0);
         calStart.set(Calendar.MILLISECOND, 0);
         Date dayStart;
-        if (hours >= getPreference(this, R.string.day_start, 2)) {
+        if (hours >= getPreference(this, R.string.day_start, 5)) {
             dayStart = calStart.getTime();
-        }
-        else dayStart = new Date(calStart.getTimeInMillis() - 86400000);
+        } else dayStart = new Date(calStart.getTimeInMillis() - 86400000);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (dayStart.getTime() > sharedPreferences.getLong(this.getString(R.string.last_day_start), 0)) {
             if (getPreference(this, R.string.big_repetition, 0) == 0) WordsHelper.missedDay(this);
+            else WordsHelper.missedDaysLearned(this);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putLong(getString(R.string.last_day_start), dayStart.getTime());
             editor.putInt(getString(R.string.small_repetition), 0);
@@ -141,15 +142,14 @@ public class MainActivity extends AppCompatActivity {
                 findViewById(R.id.smallRepetition));
         checkButton(getPreference(this, R.string.big_repetition, 0) == 1 || words3.size() == 0,
                 findViewById(R.id.bigRepetition));
-        }
+    }
 
     private void checkButton(boolean isForbidden, View button) {
         if (isForbidden) button.setBackgroundResource(R.drawable.inactive_button);
         else button.setBackgroundResource(R.drawable.button);
         button.setClickable(!isForbidden);
         if (!isForbidden && button.getId() == R.id.bigRepetition) ((Button) button)
-                .setText(String.format(getString(R.string.big_repetition), getResources()
-                        .getQuantityString(R.plurals.words, words3.size(), words3.size())));
+                .setText(String.format(getString(R.string.big_repetition), makeString(words3.size())));
     }
 
     private void setStats() {
@@ -159,19 +159,27 @@ public class MainActivity extends AppCompatActivity {
                 toNextLevel(level + 1) - getPreference(this, R.string.to_next_level, 0)));
         int number = getPreference(this, R.string.vocabulary, 0);
         ((TextView) findViewById(R.id.vocabulary)).setText(String.format(getString(R.string.vocabulary),
-                getResources().getQuantityString(R.plurals.words, number, number)));
+                makeString(number)));
         ((TextView) findViewById(R.id.learned)).setText(String.format(getString(R.string.learned),
                 getPreference(this, R.string.learned, 0)));
         ((TextView) findViewById(R.id.onLearning)).setText(String.format(getString(R.string.on_learning),
                 getPreference(this, R.string.on_learning, 0)));
         ((Button) findViewById(R.id.bigRepetition)).setText(String.format(getString(R.string.big_repetition),
-                getResources().getQuantityString(R.plurals.words, 0, 0)));
+                makeString(0)));
         ((ProgressBar) findViewById(R.id.progressBar))
                 .setProgress(getPreference(this, R.string.to_next_level, 0) * 100 / toNextLevel(level + 1));
     }
 
     public static int toNextLevel(int nextLevel) {
         return (int) (0.25 * nextLevel * nextLevel + 10 * nextLevel + 139.75) / 10 * 10;
+    }
+
+    public static String makeString(int i) {
+        if (i % 10 == 1 && i % 100 != 11) return i + " слово";
+        else if (i % 10 >= 2 && i % 10 <= 4 && (i % 100 < 12 || i % 100 > 14)) return i + " слова";
+        else if (i % 10 == 0 || (i % 10 >= 5 && i % 10 <= 9) || (i % 100 >= 11 && i % 100 <= 14))
+            return i + " слов";
+        else return i + " слова";
     }
 
     public static int getPreference(Context context, int path, int def) {

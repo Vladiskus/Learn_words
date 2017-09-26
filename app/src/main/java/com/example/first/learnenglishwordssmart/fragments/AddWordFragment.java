@@ -47,12 +47,6 @@ public class AddWordFragment extends Fragment {
                 cancel();
             }
         });
-        rootView.findViewById(R.id.clickableContainer).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                cancel();
-            }
-        });
         rootView.findViewById(R.id.acceptButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

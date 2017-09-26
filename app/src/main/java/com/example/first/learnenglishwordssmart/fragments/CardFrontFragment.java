@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -47,7 +48,19 @@ public class CardFrontFragment extends Fragment {
                 spellingView.getLayoutParams().height = ViewGroup.LayoutParams.MATCH_PARENT;
                 definitions = "";
             } else definitions = definitions.replaceAll("\\n", "\n\n");
-            ((TextView) rootView.findViewById(R.id.definitions)).setText(definitions);
+            final TextView definitionsView = ((TextView) rootView.findViewById(R.id.definitions));
+            definitionsView.setText(definitions);
+            definitionsView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    if (getView() != null) {
+                        View parent = getView().findViewById(R.id.scrollView);
+                        if (parent.getHeight() != 0 && definitionsView.getHeight() > parent.getHeight())
+                            definitionsView.setText(definitionsView.getText().subSequence(0,
+                                    String.valueOf(definitionsView.getText()).lastIndexOf("\n\n")));
+                    }
+                }
+            });
             rootView.findViewById(R.id.clickableContainer).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -55,7 +68,7 @@ public class CardFrontFragment extends Fragment {
                             .getInt(CardsActivity.POSITION));
                 }
             });
-            rootView.findViewById(R.id.definitions).setOnClickListener(new View.OnClickListener() {
+            definitionsView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     ((ContainerFragment) getParentFragment()).flipCard(getArguments()

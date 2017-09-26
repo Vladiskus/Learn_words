@@ -28,6 +28,7 @@ import com.example.first.learnenglishwordssmart.fragments.RewardFragment;
 import com.example.first.learnenglishwordssmart.fragments.WritingFragment;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class CardsActivity extends AppCompatActivity {
 
@@ -62,15 +63,23 @@ public class CardsActivity extends AppCompatActivity {
             case MainActivity.BIG_REPETITION:
                 getSupportActionBar().setTitle(R.string.cards3);
                 break;
+            default:
+                throw new UnsupportedOperationException();
         }
-        soundHelper = new SoundHelper(this);
         mPager = (CustomViewPager) findViewById(R.id.pager);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         progressBar.setMax(10000);
-        words = getIntent().getExtras().getParcelableArrayList(MainActivity.EXTRA_WORDS);
-        number = words.size();
-        for (int i = 0; i < number; i++) {
-            markList.add(1);
+        if (savedInstanceState != null) {
+            markList = savedInstanceState.getIntegerArrayList("markList");
+            words = savedInstanceState.getParcelableArrayList("words");
+            number = words.size();
+        } else {
+            words = getIntent().getExtras().getParcelableArrayList(MainActivity.EXTRA_WORDS);
+            number = words.size();
+            for (int i = 0; i < number; i++) {
+                markList.add(1);
+            }
+            if (MainActivity.getPreference(this, R.string.random, 0) == 1) Collections.shuffle(words);
         }
         setAdapter();
         pageChangeListener = new ViewPager.OnPageChangeListener() {
@@ -82,8 +91,9 @@ public class CardsActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int i) {
                 ObjectAnimator animation;
-                if (primeType.equals(MainActivity.LEARN_NEW)) animation = ObjectAnimator.ofInt(progressBar,
-                        "progress", 10000 * i / (number * 2 + 1));
+                if (primeType.equals(MainActivity.LEARN_NEW))
+                    animation = ObjectAnimator.ofInt(progressBar,
+                            "progress", 10000 * i / (number * 2 + 1));
                 else animation = ObjectAnimator.ofInt(progressBar, "progress", 10000 * i / number);
                 animation.setDuration(200);
                 animation.setInterpolator(new LinearInterpolator());
@@ -116,13 +126,20 @@ public class CardsActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putIntegerArrayList("markList", markList);
+        outState.putParcelableArrayList("words", words);
+        super.onSaveInstanceState(outState);
+    }
+
     public void setAdapter() {
         mPagerAdapter = new FragmentStatePagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
                 int type = MainActivity.getPreference(CardsActivity.this, R.string.small_repetition, 0);
                 Bundle args = new Bundle();
-                Fragment fragment = new Fragment();
+                Fragment fragment = null;
                 switch (primeType) {
                     case MainActivity.LEARN_NEW:
                         if (position < number) {
@@ -174,6 +191,8 @@ public class CardsActivity extends AppCompatActivity {
                             fragment = new RewardFragment();
                         }
                         break;
+                    default:
+                        throw new UnsupportedOperationException();
                 }
                 fragment.setArguments(args);
                 return fragment;
@@ -195,6 +214,12 @@ public class CardsActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction().setCustomAnimations(android.R.animator.fade_in,
                 android.R.animator.fade_out).add(R.id.fragmentContainer2,
                 new NewLevelFragment()).addToBackStack(null).commit();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        soundHelper = new SoundHelper(this);
     }
 
     @Override
