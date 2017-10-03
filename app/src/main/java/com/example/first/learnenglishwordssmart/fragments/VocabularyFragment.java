@@ -7,6 +7,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
 
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.activities.MainActivity;
@@ -32,5 +34,16 @@ public class VocabularyFragment extends Fragment {
         else getView().findViewById(R.id.tip).setVisibility(View.VISIBLE);
     }
 
-
+    public void gameFinished() {
+        getView().findViewById(R.id.tip).setVisibility(View.VISIBLE);
+        ((TextView) getView().findViewById(R.id.text)).setText(getString(R.string.game_finished));
+        getView().findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .remove(VocabularyFragment.this).commit();
+                new WordsActivity.EndTask((WordsActivity) getActivity()).execute();
+            }
+        });
+    }
 }

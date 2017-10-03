@@ -211,9 +211,10 @@ public class CardsActivity extends AppCompatActivity {
     }
 
     public void pushNewLevel() {
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(android.R.animator.fade_in,
+        if (getSupportFragmentManager().findFragmentByTag("new level") == null)
+            getSupportFragmentManager().beginTransaction().setCustomAnimations(android.R.animator.fade_in,
                 android.R.animator.fade_out).add(R.id.fragmentContainer2,
-                new NewLevelFragment()).addToBackStack(null).commit();
+                new NewLevelFragment(), "new level").addToBackStack(null).commit();
     }
 
     @Override

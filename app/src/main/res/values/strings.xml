@@ -59,8 +59,9 @@
     <string name="proficient">Proficient</string>
     <string name="audio">Авто-озвучивание</string>
     <string name="random">Случайный порядок</string>
-    <string name="en_ru">Начинать с ангийского</string>
+    <string name="en_ru">Начинать с английского</string>
     <string name="speed">Скорость</string>
+    <string name="game_finished">Поздравляем,\n вы выучили все слова!</string>
     <string name="downloading">Загрузка базы данных, ждите... %d%%</string>
 
     <string-array name="multipliers">

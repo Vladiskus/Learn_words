@@ -74,7 +74,7 @@ public class WritingFragment extends Fragment {
         });
         TextView translation = ((TextView) rootView.findViewById(R.id.translation));
         translation.setText(words.get(position).getTranslation());
-        translation.setMaxLines(words.get(position).getTranslation().contains(",") ? 3 : 1);
+        translation.setMaxLines(words.get(position).getTranslation().split(",").length);
         AutofitHelper.create(translation);
         setWord();
         final ArrayList<Character> array = getArray();

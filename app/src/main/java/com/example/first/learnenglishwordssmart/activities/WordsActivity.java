@@ -55,7 +55,6 @@ public class WordsActivity extends AppCompatActivity {
     private int backStepCount = 1;
     private double requiredRatio;
     private boolean isPaused = false;
-    private boolean isStarted = false;
     private transient boolean isForbidden = false;
 
     @Override
@@ -108,11 +107,10 @@ public class WordsActivity extends AppCompatActivity {
             requiredRatio = savedInstanceState.getDouble("requiredRatio");
             isPaused = savedInstanceState.getBoolean("isPaused");
             isForbidden = savedInstanceState.getBoolean("isForbidden");
-            isStarted = savedInstanceState.getBoolean("isStarted");
             invalidateOptionsMenu();
         }
-        if (!isStarted) getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragmentContainer, new VocabularyFragment(), "1").commit();
+        if (savedInstanceState == null) getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragmentContainer, new VocabularyFragment(), "fragment").commit();
         else if (!isPaused) ready();
     }
 
@@ -128,7 +126,6 @@ public class WordsActivity extends AppCompatActivity {
         outState.putDouble("realRatio", realRatio);
         outState.putDouble("requiredRatio", requiredRatio);
         outState.putBoolean("isPaused", isPaused);
-        outState.putBoolean("isStarted", isStarted);
         outState.putBoolean("isForbidden", isForbidden);
         super.onSaveInstanceState(outState);
     }
@@ -162,7 +159,7 @@ public class WordsActivity extends AppCompatActivity {
                 break;
         }
         count = (vocabulary > length * multiplier) ? vocabulary - length * multiplier : 0;
-        Fragment fragment = getSupportFragmentManager().findFragmentByTag("1");
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag("fragment");
         fragment.getView().findViewById(R.id.choose).setVisibility(View.GONE);
         fragment.getView().findViewById(R.id.tip).setVisibility(View.VISIBLE);
     }
@@ -239,7 +236,8 @@ public class WordsActivity extends AppCompatActivity {
                 try {
                     startFalling();
                 } catch (IndexOutOfBoundsException e) {
-                    new EndTask(WordsActivity.this).execute();
+                    if (primeType.equals(MainActivity.LEARN_NEW)) gameFinished();
+                    else new EndTask(WordsActivity.this).execute();
                     return;
                 }
                 if (primeType.equals(MainActivity.GAME)) {
@@ -305,10 +303,29 @@ public class WordsActivity extends AppCompatActivity {
         animation.start();
     }
 
-    private static class EndTask extends AsyncTask<Void, Void, Void> {
+    public void gameFinished() {
+        VocabularyFragment  vocabularyFragment = new VocabularyFragment();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragmentContainer, vocabularyFragment, "fragment").commit();
+        getSupportFragmentManager().executePendingTransactions();
+        removeAll(this);
+        vocabularyFragment.gameFinished();
+    }
+
+    private static void removeAll(WordsActivity activity) {
+        for (ObjectAnimator objectAnimator : activity.animators)
+            activity.mRelativeLayout.removeView((View) objectAnimator.getTarget());
+        for (Runnable runnable : activity.removeRunnables)
+            activity.removeHandler.removeCallbacks(runnable);
+        for (Runnable runnable : activity.fallRunnables)
+            activity.fallHandler.removeCallbacks(runnable);
+        activity.isForbidden = true;
+    }
+
+    public static class EndTask extends AsyncTask<Void, Void, Void> {
         WeakReference<WordsActivity> weakActivity;
 
-        EndTask(WordsActivity activity) {
+        public EndTask(WordsActivity activity) {
             weakActivity = new WeakReference<>(activity);
         }
 
@@ -317,13 +334,7 @@ public class WordsActivity extends AppCompatActivity {
             WordsActivity activity = weakActivity.get();
             if (activity != null) {
                 activity.animate(10000);
-                for (ObjectAnimator objectAnimator : activity.animators)
-                    activity.mRelativeLayout.removeView((View) objectAnimator.getTarget());
-                for (Runnable runnable : activity.removeRunnables)
-                    activity.removeHandler.removeCallbacks(runnable);
-                for (Runnable runnable : activity.fallRunnables)
-                    activity.fallHandler.removeCallbacks(runnable);
-                activity.isForbidden = true;
+                removeAll(activity);
                 activity.findViewById(R.id.roundProgressBar).setVisibility(View.VISIBLE);
             }
         }
@@ -340,7 +351,8 @@ public class WordsActivity extends AppCompatActivity {
                             R.string.last_rank, 12522) - activity.words.size();
                     PreferenceManager.getDefaultSharedPreferences(activity)
                             .edit().putInt(activity.getString(R.string.vocabulary), activity.vocabulary).apply();
-                    if (MainActivity.getPreference(activity, R.string.vocabulary, 0) != 0) return null;
+                    if (MainActivity.getPreference(activity, R.string.vocabulary, 0) != 0)
+                        return null;
                     if (activity.primeRanks.size() != 0) rank = (activity.primeRanks.get(0) +
                             activity.primeRanks.get(activity.primeRanks.size() - 1)) / 2;
                     else rank = 1;
@@ -372,13 +384,12 @@ public class WordsActivity extends AppCompatActivity {
 
     public void start(View view) {
         getSupportFragmentManager().beginTransaction().remove(getSupportFragmentManager()
-                .findFragmentByTag("1")).commit();
+                .findFragmentByTag("fragment")).commit();
         if (!isForbidden) ready();
         else {
             isForbidden = false;
             findViewById(R.id.roundProgressBar).setVisibility(View.VISIBLE);
         }
-        isStarted = true;
     }
 
     private void ready() {

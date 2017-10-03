@@ -123,8 +123,8 @@ public class RewardFragment extends Fragment {
         double sum = 0;
         for (int i = 0; i < number; i++) sum += ((CardsActivity) getActivity()).markList.get(i);
         ((ImageView) rootView.findViewById(R.id.star1)).setImageResource((R.drawable.star_linear));
-        ((ImageView) rootView.findViewById(R.id.star1)).setImageResource((R.drawable.star_linear));
-        ((ImageView) rootView.findViewById(R.id.star1)).setImageResource((R.drawable.star_linear));
+        ((ImageView) rootView.findViewById(R.id.star2)).setImageResource((R.drawable.star_linear));
+        ((ImageView) rootView.findViewById(R.id.star3)).setImageResource((R.drawable.star_linear));
         if (sum / number >= 0.4) ((ImageView) rootView.findViewById(R.id.star1))
                 .setImageResource((R.drawable.star_filled));
         if (sum / number >= 0.6) ((ImageView) rootView.findViewById(R.id.star2))

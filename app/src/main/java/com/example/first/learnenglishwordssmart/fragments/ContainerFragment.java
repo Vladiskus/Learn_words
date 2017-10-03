@@ -73,8 +73,10 @@ public class ContainerFragment extends Fragment {
             fragment = (isShowingFront) ? new CardFrontFragment() : new CardBackFragment();
         }
         fragment.setArguments(args);
-        getChildFragmentManager().beginTransaction()
-                .replace(R.id.fragmentContainer, fragment).commit();
+        if (savedInstanceState == null) {
+            getChildFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, fragment, "fragment").commit();
+        } else fragment = getChildFragmentManager().findFragmentByTag("fragment");
         isShowingFront = fragment instanceof CardFrontFragment;
         return rootView;
     }
@@ -89,11 +91,11 @@ public class ContainerFragment extends Fragment {
     }
 
     public void flipCard(int position) {
+        Bundle args = new Bundle();
+        args.putInt(CardsActivity.POSITION, position);
+        args.putInt(CardsActivity.TYPE, type);
         if (!isShowingFront) {
             Fragment fragment = new CardFrontFragment();
-            Bundle args = new Bundle();
-            args.putInt("position", position);
-            args.putInt(CardsActivity.TYPE, type);
             fragment.setArguments(args);
             this.fragment = fragment;
             getChildFragmentManager().beginTransaction().setCustomAnimations(
@@ -101,13 +103,10 @@ public class ContainerFragment extends Fragment {
                     R.animator.card_flip_left_out,
                     R.animator.card_flip_right_in,
                     R.animator.card_flip_right_out)
-                    .replace(R.id.fragmentContainer, fragment).commit();
+                    .replace(R.id.fragmentContainer, fragment, "fragment").commit();
             getChildFragmentManager().executePendingTransactions();
         } else {
             Fragment fragment = new CardBackFragment();
-            Bundle args = new Bundle();
-            args.putInt(CardsActivity.POSITION, position);
-            args.putInt(CardsActivity.TYPE, type);
             fragment.setArguments(args);
             this.fragment = fragment;
             getChildFragmentManager().beginTransaction().setCustomAnimations(
@@ -115,7 +114,7 @@ public class ContainerFragment extends Fragment {
                     R.animator.card_flip_right_out,
                     R.animator.card_flip_left_in,
                     R.animator.card_flip_left_out)
-                    .replace(R.id.fragmentContainer, fragment).commit();
+                    .replace(R.id.fragmentContainer, fragment, "fragment").commit();
         }
         isShowingFront = !isShowingFront;
         makeSound(500, 0);
