@@ -3,6 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/undo"
+        android:title="@string/cancel"
+        android:icon="@drawable/ic_action_navigate_before"
+        app:showAsAction="always"/>
+
+    <item
         android:id="@+id/settings"
         android:title="@string/settings"
         android:icon="@drawable/ic_settings_white_24dp"

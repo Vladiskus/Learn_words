@@ -47,6 +47,7 @@ public class WordsActivity extends AppCompatActivity {
     private Handler removeHandler = new Handler();
     private String primeType;
     private int vocabulary;
+    private int oldVocabulary;
     private int count = 0;
     private int length = 100;
     private int duration;
@@ -87,6 +88,7 @@ public class WordsActivity extends AppCompatActivity {
 
             }
         });
+        oldVocabulary = MainActivity.getPreference(this, R.string.vocabulary, 0);
         primeType = getIntent().getExtras().getString(MainActivity.EXTRA_PRIME_TYPE);
         mRelativeLayout = (RelativeLayout) findViewById(R.id.relative_layout);
         if (primeType.equals(MainActivity.GAME))
@@ -214,6 +216,14 @@ public class WordsActivity extends AppCompatActivity {
                 activity.words = WordsHelper.getWordsSpelling(activity, (activity.primeType
                         .equals(MainActivity.GAME)) ? null : String.valueOf((int) (2 * 10 * MainActivity
                         .getPreference(activity, R.string.number_of_words, 10) / (1 - activity.requiredRatio))), null);
+                if (activity.oldVocabulary > 12500)
+                    PreferenceManager.getDefaultSharedPreferences(activity).edit()
+                            .putInt(activity.getString(R.string.vocabulary),
+                                    activity.count - (int) (activity.length * (1 -
+                                            activity.realRatio)) * activity.multiplier +
+                                            MainActivity.getPreference(activity, R.string.last_rank,
+                                                    12522) - activity.words.size() - MainActivity
+                                            .getPreference(activity, R.string.on_learning, 0)).apply();
             }
             return null;
         }
@@ -233,6 +243,11 @@ public class WordsActivity extends AppCompatActivity {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
+                count  = 500;
+                if (count == 500) {
+                    new EndTask(WordsActivity.this).execute();
+                    return;
+                }
                 try {
                     startFalling();
                 } catch (IndexOutOfBoundsException e) {
@@ -304,7 +319,7 @@ public class WordsActivity extends AppCompatActivity {
     }
 
     public void gameFinished() {
-        VocabularyFragment  vocabularyFragment = new VocabularyFragment();
+        VocabularyFragment vocabularyFragment = new VocabularyFragment();
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragmentContainer, vocabularyFragment, "fragment").commit();
         getSupportFragmentManager().executePendingTransactions();
@@ -351,8 +366,7 @@ public class WordsActivity extends AppCompatActivity {
                             R.string.last_rank, 12522) - activity.words.size();
                     PreferenceManager.getDefaultSharedPreferences(activity)
                             .edit().putInt(activity.getString(R.string.vocabulary), activity.vocabulary).apply();
-                    if (MainActivity.getPreference(activity, R.string.vocabulary, 0) != 0)
-                        return null;
+                    if (activity.oldVocabulary != 0) return null;
                     if (activity.primeRanks.size() != 0) rank = (activity.primeRanks.get(0) +
                             activity.primeRanks.get(activity.primeRanks.size() - 1)) / 2;
                     else rank = 1;

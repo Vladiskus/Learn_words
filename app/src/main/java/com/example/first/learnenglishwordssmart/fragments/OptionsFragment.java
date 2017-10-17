@@ -57,6 +57,7 @@ public class OptionsFragment extends Fragment {
                 int currentItem = pager.getCurrentItem();
                 if (!(activity.mPagerAdapter.instantiateItem(pager, currentItem)
                         instanceof RewardFragment)) activity.setAdapter();
+                if (currentItem > activity.number + 1) pager.setCurrentItem(activity.number + 2, false);
             }
         });
         switch3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

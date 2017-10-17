@@ -50,7 +50,7 @@ public class SelectionActivity extends AppCompatActivity {
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle(R.string.selection);
-        soundHelper = new SoundHelper(this);
+        if (soundHelper == null) soundHelper = new SoundHelper(this);
         number = MainActivity.getPreference(this, R.string.number_of_words, 10);
         primeType = getIntent().getExtras().getString(MainActivity.EXTRA_PRIME_TYPE);
         numberButton = (Button) findViewById(R.id.numberButton);

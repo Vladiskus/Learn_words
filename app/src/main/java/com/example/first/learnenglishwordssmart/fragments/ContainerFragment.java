@@ -52,6 +52,7 @@ public class ContainerFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 flipCard(position);
+                ((CardsActivity) getActivity()).markList.set(position, 1);
                 makeSound(200, 800);
                 turnOffButtons();
 
@@ -120,14 +121,14 @@ public class ContainerFragment extends Fragment {
         makeSound(500, 0);
     }
 
-    private void turnOffButtons() {
+    public void turnOffButtons() {
         knownButton.setClickable(false);
         unknownButton.setClickable(false);
         knownButton.setBackgroundResource(R.drawable.inactive_button);
         unknownButton.setBackgroundResource(R.drawable.inactive_button);
     }
 
-    private void turnOnButtons() {
+    public void turnOnButtons() {
         knownButton.setClickable(true);
         unknownButton.setClickable(true);
         knownButton.setBackgroundResource(R.drawable.button);

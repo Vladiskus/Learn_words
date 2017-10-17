@@ -4,10 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -26,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,11 +39,13 @@ public class MainActivity extends AppCompatActivity {
     public static final String SMALL_REPETITION = "small_repetition";
     public static final String BIG_REPETITION = "big_repetition";
 
+    public static boolean isValid = false;
+
     private ArrayList<Word> words1;
     private ArrayList<Word> words2;
     private ArrayList<Word> words3;
     private SoundHelper soundHelper;
-    private boolean isDownloaded;
+    public boolean isDownloaded;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,8 +72,10 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.learnNew).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Set<String> addedWords = PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
+                        .getStringSet(getString(R.string.added_words), new HashSet<String>());
                 if (words1.get(0).getRank() < getPreference(MainActivity.this, R.string.current_position, 0) ||
-                        words1.get(0).getRank() > 12522) {
+                        addedWords.contains(String.valueOf(words1.get(0).getRank()))) {
                     intent.putExtra(EXTRA_WORDS, words1);
                     intent.setClass(MainActivity.this, SelectionActivity.class);
                 } else {
@@ -100,6 +104,13 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        if (isValid) words3 = savedInstanceState.getParcelableArrayList("words3");
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList("words3", words3);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -109,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void init() {
-        soundHelper = new SoundHelper(this);
+        if (soundHelper == null) soundHelper = new SoundHelper(this);
         Calendar calStart = new GregorianCalendar();
         calStart.setTime(new Date());
         int hours = calStart.get(Calendar.HOUR_OF_DAY);
@@ -132,9 +143,12 @@ public class MainActivity extends AppCompatActivity {
             editor.putInt(getString(R.string.learn_new), 0);
             editor.commit();
         }
-        words1 = WordsHelper.getWords(MainActivity.this, LEARN_NEW, null);
-        words2 = WordsHelper.getWords(MainActivity.this, SMALL_REPETITION, null);
-        words3 = WordsHelper.getWords(MainActivity.this, BIG_REPETITION, null);
+        words1 = WordsHelper.getWords(this, LEARN_NEW, null);
+        words2 = WordsHelper.getWords(this, SMALL_REPETITION, null);
+        if (!isValid) {
+            words3 = WordsHelper.getWords(this, BIG_REPETITION, null);
+            isValid = true;
+        }
         setStats();
         checkButton(getPreference(this, R.string.vocabulary, 0) == 0 ||
                 getPreference(this, R.string.learn_new, 0) == 1, findViewById(R.id.learnNew));
@@ -166,8 +180,8 @@ public class MainActivity extends AppCompatActivity {
                 getPreference(this, R.string.on_learning, 0)));
         ((Button) findViewById(R.id.bigRepetition)).setText(String.format(getString(R.string.big_repetition),
                 makeString(0)));
-        ((ProgressBar) findViewById(R.id.progressBar))
-                .setProgress(getPreference(this, R.string.to_next_level, 0) * 100 / toNextLevel(level + 1));
+        ((ProgressBar) findViewById(R.id.progressBar)).setProgress(getPreference(this,
+                R.string.to_next_level, 0) * 100 / toNextLevel(level + 1));
     }
 
     public static int toNextLevel(int nextLevel) {

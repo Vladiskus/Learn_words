@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.example.first.learnenglishwordssmart.R;
 import com.example.first.learnenglishwordssmart.activities.MainActivity;
@@ -15,7 +16,9 @@ import com.google.gson.reflect.TypeToken;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 public class WordsHelper {
 
@@ -50,14 +53,16 @@ public class WordsHelper {
 
     public static Word getWordFromDataBase(Context context, String spelling) {
         return cursorToList(context.getContentResolver().query(WordsContract.WordsEntry.CONTENT_URI,
-                null, WordsContract.WordsEntry.WORD_SPELLING, new String[]{spelling}, null)).get(0);
+                null, WordsContract.WordsEntry.WORD_SPELLING, new String[]{spelling}, null), null).get(0);
     }
 
-    private static ArrayList<Word> cursorToList(Cursor cursor) {
+    private static ArrayList<Word> cursorToList(Cursor cursor, ArrayList<Integer> ranksList) {
         ArrayList<Word> words = new ArrayList<>();
         while (cursor.moveToNext()) {
+            int rank = cursor.getInt(cursor.getColumnIndex(WordsContract.WordsEntry.WORD_RANK));
+            if (ranksList != null && !ranksList.contains(rank)) continue;
             Word word = new Word();
-            word.setRank(cursor.getInt(cursor.getColumnIndex(WordsContract.WordsEntry.WORD_RANK)));
+            word.setRank(rank);
             word.setSpelling(cursor.getString(cursor.getColumnIndex(WordsContract.WordsEntry.WORD_SPELLING)));
             word.setTranslation(cursor.getString(cursor.getColumnIndex(WordsContract.WordsEntry.WORD_TRANSLATION)));
             word.setDefinitions(cursor.getString(cursor.getColumnIndex(WordsContract.WordsEntry.WORD_DEFINITIONS)));
@@ -78,10 +83,10 @@ public class WordsHelper {
     public static ArrayList<String> getWordsSpelling(Context context, String amount,
                                                      ArrayList<String> exceptionsList) {
         amount = amount != null ? " LIMIT " + amount : "";
-        Cursor cursor = context.getContentResolver()
-                .query(WordsContract.WordsEntry.CONTENT_URI, new String[]{WordsContract.WordsEntry
-                                .WORD_SPELLING}, WordsContract.WordsEntry.WORD_IS_KNOWN,
-                        new String[]{"0"}, WordsContract.WordsEntry.WORD_IS_KNOWN + amount);
+        Cursor cursor = context.getContentResolver().query(WordsContract.WordsEntry.CONTENT_URI,
+                new String[]{WordsContract.WordsEntry.WORD_SPELLING}, WordsContract.WordsEntry.WORD_IS_KNOWN,
+                        exceptionsList == null ? new String[]{"0"} : new String[]{"0", "1"},
+                        WordsContract.WordsEntry.WORD_IS_KNOWN + amount);
         ArrayList<String> words = new ArrayList<>();
         while (cursor.moveToNext()) {
             String spelling = cursor.getString(cursor.getColumnIndex(WordsContract.WordsEntry.WORD_SPELLING));
@@ -94,27 +99,26 @@ public class WordsHelper {
     public static ArrayList<Word> getWords(Context context, String primeType, String amount) {
         amount = amount != null ? " LIMIT " + amount : "";
         Cursor mCursor;
-        ArrayList<String> rankList = new ArrayList<>();
         switch (primeType) {
             case MainActivity.GAME:
                 return cursorToList(context.getContentResolver()
-                        .query(WordsContract.WordsEntry.CONTENT_URI, null,
-                                WordsContract.WordsEntry.WORD_IS_KNOWN,
-                                new String[]{"0"}, WordsContract.WordsEntry.WORD_IS_KNOWN + amount));
+                        .query(WordsContract.WordsEntry.CONTENT_URI, null, WordsContract.WordsEntry.WORD_IS_KNOWN,
+                                new String[]{"0"}, WordsContract.WordsEntry.WORD_IS_KNOWN + amount), null);
             case MainActivity.LEARN_NEW:
                 amount = " LIMIT " + String.valueOf(PreferenceManager.getDefaultSharedPreferences(context)
                         .getInt(context.getString(R.string.number_of_words), 10));
                 return cursorToList(context.getContentResolver().query(WordsContract.WordsEntry.CONTENT_URI,
                         null, WordsContract.WordsEntry.WORD_IS_KNOWN, new String[]{"0", "2"},
-                        WordsContract.WordsEntry.WORD_IS_KNOWN + " DESC " + amount));
+                        WordsContract.WordsEntry.WORD_IS_KNOWN + " DESC " + amount), null);
             default:
                 mCursor = context.getContentResolver().query(WordsContract.WordsEntry.CONTENT_URI,
-                        null, WordsContract.WordsEntry.WORD_IS_KNOWN,
-                        new String[]{"3"}, WordsContract.WordsEntry._ID + " ASC " + amount);
+                        null, WordsContract.WordsEntry.WORD_IS_KNOWN, new String[]{"3"},
+                        WordsContract.WordsEntry._ID + " ASC " + amount);
                 break;
         }
         long dayStart = (PreferenceManager.getDefaultSharedPreferences(context)
                 .getLong(context.getString(R.string.last_day_start), 0));
+        ArrayList<Integer> ranksList = new ArrayList<>();
         while (mCursor.moveToNext()) {
             Date wordDate;
             try {
@@ -129,7 +133,7 @@ public class WordsHelper {
             if (MainActivity.getPreference(context, R.string.small_repetition, 0) != 4 &&
                     wordDate.getTime() > dayStart) c = true;
             int[] a = new int[]{1, 3, 7, 14, 30, 60};
-            for (int j = 0; j <= MainActivity.getPreference(context, R.string.days_missed, 0); j++){
+            for (int j = 0; j <= MainActivity.getPreference(context, R.string.days_missed, 0); j++) {
                 for (int i = 0; i < a.length; i++) {
                     long time = wordDate.getTime() + 86400000 * (a[i] + j);
                     if (time > dayStart && time < dayStart + 86400000) c = true;
@@ -137,14 +141,11 @@ public class WordsHelper {
             }
             if ((primeType.equals(MainActivity.SMALL_REPETITION) && wordDate.getTime() > dayStart) ||
                     (primeType.equals(MainActivity.BIG_REPETITION) && c)) {
-                rankList.add(String.valueOf(mCursor.getInt(mCursor
-                        .getColumnIndex(WordsContract.WordsEntry.WORD_RANK))));
+                ranksList.add(mCursor.getInt(mCursor.getColumnIndex(WordsContract.WordsEntry.WORD_RANK)));
             }
         }
-        mCursor.close();
-        if (rankList.size() == 0) return new ArrayList<>();
-        return cursorToList(context.getContentResolver().query(WordsContract.WordsEntry.CONTENT_URI,
-                null, WordsContract.WordsEntry.WORD_RANK, rankList.toArray(new String[rankList.size()]), null));
+        mCursor.moveToPosition(-1);
+        return cursorToList(mCursor, ranksList);
     }
 
     public static void missedDay(Context context) {
@@ -240,15 +241,26 @@ public class WordsHelper {
         cv.put(WordsContract.WordsEntry.WORD_SPELLING, spelling);
         if (translation != null) cv.put(WordsContract.WordsEntry.WORD_TRANSLATION, translation);
         cv.put(WordsContract.WordsEntry.WORD_IS_KNOWN, 2);
-        if (isContains)
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        int rank;
+        if (isContains) {
             context.getContentResolver().update(WordsContract.WordsEntry.CONTENT_URI, cv,
                     WordsContract.WordsEntry.WORD_SPELLING, new String[]{spelling});
-        else {
-            PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(context.getString(R.string.last_rank),
-                    MainActivity.getPreference(context, R.string.last_rank, 12522) + 1).apply();
-            cv.put(WordsContract.WordsEntry.WORD_RANK, MainActivity
-                    .getPreference(context, R.string.last_rank, 12522));
+            Cursor cursor = context.getContentResolver().query(WordsContract.WordsEntry.CONTENT_URI,
+                    new String[]{WordsContract.WordsEntry.WORD_RANK},
+                    WordsContract.WordsEntry.WORD_SPELLING, new String[]{spelling}, null, null);
+            cursor.moveToFirst();
+            rank = cursor.getInt(cursor.getColumnIndex(WordsContract.WordsEntry.WORD_RANK));
+            cursor.close();
+        } else {
+            rank = MainActivity.getPreference(context, R.string.last_rank, 12522) + 1;
+            editor.putInt(context.getString(R.string.last_rank), rank);
+            cv.put(WordsContract.WordsEntry.WORD_RANK, rank);
             context.getContentResolver().insert(WordsContract.WordsEntry.CONTENT_URI, cv);
         }
+        Set<String> addedWords = PreferenceManager.getDefaultSharedPreferences(context)
+                .getStringSet(context.getString(R.string.added_words), new HashSet<String>());
+        addedWords.add(String.valueOf(rank));
+        editor.putStringSet(context.getString(R.string.added_words), addedWords).apply();
     }
 }

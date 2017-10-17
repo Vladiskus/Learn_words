@@ -30,22 +30,23 @@ import java.util.Date;
 
 public class RewardFragment extends Fragment {
 
-    SharedPreferences sharedPreferences;
-    ArrayList<Word> words;
-    int number;
-    int type;
-    String primeType;
-    View rootView;
+    private ArrayList<Word> words;
+    private int number;
+    private int type;
+    private int exp;
+    private boolean isLevelUp = false;
+    private String primeType;
+    private View rootView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_reward, container, false);
         final CustomViewPager mPager = ((CardsActivity) getActivity()).mPager;
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         type = getArguments().getInt(CardsActivity.TYPE);
         words = getActivity().getIntent().getParcelableArrayListExtra(MainActivity.EXTRA_WORDS);
         number = words.size();
+        if (savedInstanceState != null) isLevelUp = savedInstanceState.getBoolean("isLevelUp");
         primeType = getActivity().getIntent().getExtras().getString(MainActivity.EXTRA_PRIME_TYPE);
         rootView.findViewById(R.id.againButton).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,15 +80,18 @@ public class RewardFragment extends Fragment {
                                     .putInt(getString(R.string.small_repetition),
                                             MainActivity.getPreference(getActivity(),
                                                     R.string.small_repetition, 0) + 1);
+                            MainActivity.isValid = false;
                             break;
                         case MainActivity.SMALL_REPETITION:
-                            editor.putInt(getString(R.string.small_repetition),
-                                    MainActivity.getPreference(getActivity(),
-                                            R.string.small_repetition, 0) + 1);
+                            int type = MainActivity.getPreference(getActivity(),
+                                    R.string.small_repetition, 0);
+                            editor.putInt(getString(R.string.small_repetition), type + 1);
+                            if (type == 3) MainActivity.isValid = false;
                             break;
                         case MainActivity.BIG_REPETITION:
                             editor.putInt(getString(R.string.big_repetition), 1)
                                     .putInt(getString(R.string.small_repetition), 4);
+                            MainActivity.isValid = false;
                             for (int i = 0; i < number; i++) {
                                 if (((CardsActivity) getActivity()).markList.get(i) == 1)
                                     WordsHelper.success(getActivity(), words.get(i));
@@ -95,6 +99,8 @@ public class RewardFragment extends Fragment {
                             }
                             break;
                     }
+                    if (!isLevelUp) editor.putInt(getString(R.string.to_next_level), exp +
+                            MainActivity.getPreference(getActivity(), R.string.to_next_level, 0));
                     editor.commit();
                     setNotifications();
                     Intent intent = new Intent();
@@ -107,19 +113,7 @@ public class RewardFragment extends Fragment {
         return rootView;
     }
 
-    private void checkLevel() {
-        int oldLevel = MainActivity.getPreference(getActivity(), R.string.level, 0);
-        int exp = MainActivity.getPreference(getActivity(), R.string.to_next_level, 0);
-        if (exp >= MainActivity.toNextLevel(oldLevel + 1)) {
-            sharedPreferences.edit().putInt(getString(R.string.level), oldLevel + 1).apply();
-            sharedPreferences.edit().putInt(getString(R.string.to_next_level),
-                    exp - MainActivity.toNextLevel(oldLevel + 1)).apply();
-            ((CardsActivity) getActivity()).pushNewLevel();
-        }
-    }
-
     public void setInfo() {
-        int oldExp = MainActivity.getPreference(getActivity(), R.string.to_next_level, 0);
         double sum = 0;
         for (int i = 0; i < number; i++) sum += ((CardsActivity) getActivity()).markList.get(i);
         ((ImageView) rootView.findViewById(R.id.star1)).setImageResource((R.drawable.star_linear));
@@ -131,12 +125,20 @@ public class RewardFragment extends Fragment {
                 .setImageResource((R.drawable.star_filled));
         if (sum / number >= 0.8) ((ImageView) rootView.findViewById(R.id.star3))
                 .setImageResource((R.drawable.star_filled));
-        sharedPreferences.edit().putInt(getString(R.string.to_next_level),
-                (int) (type == 11 ? sum * 2 : sum) + oldExp).apply();
+        exp = (int) (type == 11 ? sum * 2 : sum);
         ((TextView) rootView.findViewById(R.id.reward)).setText(String.format(getActivity()
-                        .getString(R.string.reward),
-                MainActivity.getPreference(getActivity(), R.string.to_next_level, 0) - oldExp));
-        checkLevel();
+                        .getString(R.string.reward), exp));
+        int oldLevel = MainActivity.getPreference(getActivity(), R.string.level, 0);
+        int newExp = exp + MainActivity.getPreference(getActivity(), R.string.to_next_level, 0);
+        if (newExp >= MainActivity.toNextLevel(oldLevel + 1)) {
+            isLevelUp = true;
+            SharedPreferences.Editor editor = PreferenceManager
+                    .getDefaultSharedPreferences(getActivity()).edit();
+            editor.putInt(getString(R.string.level), oldLevel + 1);
+            editor.putInt(getString(R.string.to_next_level), newExp - MainActivity.toNextLevel(oldLevel + 1));
+            editor.apply();
+            ((CardsActivity) getActivity()).pushNewLevel();
+        }
     }
 
     private void setNotifications() {
@@ -159,5 +161,11 @@ public class RewardFragment extends Fragment {
                     1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
             alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + 79200000, pendingIntent);
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean("isLevelUp", isLevelUp);
+        super.onSaveInstanceState(outState);
     }
 }

@@ -38,6 +38,7 @@ public class DownloadDBService extends IntentService {
                         .setText(String.format(activity.getString(R.string.downloading), msg.arg1));
                 if (msg.arg1 == 100) {
                     activity.findViewById(R.id.download_layout).setVisibility(View.GONE);
+                    activity.isDownloaded = true;
                     activity.init();
                 }
                 return true;

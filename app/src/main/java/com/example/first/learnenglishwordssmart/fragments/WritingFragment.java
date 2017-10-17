@@ -98,11 +98,12 @@ public class WritingFragment extends Fragment {
             public View getView(final int position, View convertView, ViewGroup parent) {
                 final Button button = new Button(parentActivity);
                 button.setLayoutParams(new ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT));
+                        getResources().getDisplayMetrics().heightPixels / 3 / 4,
+                        getResources().getDisplayMetrics().heightPixels / 3 / 4));
                 button.setText(array.get(position).toString());
                 button.setAllCaps(false);
-                button.setTextSize(30);
+                button.setTextSize(28);
+                button.setPadding(0, 0, 0, 0);
                 button.setBackgroundColor(getResources().getColor(R.color.white));
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override

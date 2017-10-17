@@ -79,7 +79,8 @@ public class CardsActivity extends AppCompatActivity {
             for (int i = 0; i < number; i++) {
                 markList.add(1);
             }
-            if (MainActivity.getPreference(this, R.string.random, 0) == 1) Collections.shuffle(words);
+            if (MainActivity.getPreference(this, R.string.random, 0) == 1)
+                Collections.shuffle(words);
         }
         setAdapter();
         pageChangeListener = new ViewPager.OnPageChangeListener() {
@@ -90,6 +91,7 @@ public class CardsActivity extends AppCompatActivity {
 
             @Override
             public void onPageSelected(int i) {
+                if (i == 0 || i == 1) invalidateOptionsMenu();
                 ObjectAnimator animation;
                 if (primeType.equals(MainActivity.LEARN_NEW))
                     animation = ObjectAnimator.ofInt(progressBar,
@@ -105,8 +107,10 @@ public class CardsActivity extends AppCompatActivity {
                     mPager.setPagingEnabled(true);
                 } else mPager.setPagingEnabled(false);
                 if (MainActivity.getPreference(CardsActivity.this, R.string.audio, 1) == 1) {
-                    if (fragment instanceof ContainerFragment)
+                    if (fragment instanceof ContainerFragment) {
                         ((ContainerFragment) fragment).makeSound(200, 0);
+                        ((ContainerFragment) fragment).turnOnButtons();
+                    }
                     if (fragment instanceof WritingFragment)
                         ((WritingFragment) fragment).makeSound(200);
                 }
@@ -213,14 +217,14 @@ public class CardsActivity extends AppCompatActivity {
     public void pushNewLevel() {
         if (getSupportFragmentManager().findFragmentByTag("new level") == null)
             getSupportFragmentManager().beginTransaction().setCustomAnimations(android.R.animator.fade_in,
-                android.R.animator.fade_out).add(R.id.fragmentContainer2,
-                new NewLevelFragment(), "new level").addToBackStack(null).commit();
+                    android.R.animator.fade_out).add(R.id.fragmentContainer2,
+                    new NewLevelFragment(), "new level").addToBackStack(null).commit();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        soundHelper = new SoundHelper(this);
+        if (soundHelper == null) soundHelper = new SoundHelper(this);
     }
 
     @Override
@@ -236,6 +240,18 @@ public class CardsActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (primeType.equals(MainActivity.BIG_REPETITION) || primeType.equals(MainActivity.SMALL_REPETITION)) {
+            if (mPager.getCurrentItem() != 0) menu.findItem(R.id.undo).setVisible(true);
+            else menu.findItem(R.id.undo).setVisible(false);
+            if (primeType.equals(MainActivity.SMALL_REPETITION) && MainActivity
+                    .getPreference(CardsActivity.this, R.string.small_repetition, 0) == 3)
+                menu.findItem(R.id.undo).setVisible(false);
+        } else menu.findItem(R.id.undo).setVisible(false);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.settings:
@@ -244,6 +260,9 @@ public class CardsActivity extends AppCompatActivity {
                     getSupportFragmentManager().beginTransaction()
                             .replace(R.id.fragmentContainer2, new OptionsFragment()).addToBackStack(null).commit();
                 else getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                return true;
+            case R.id.undo:
+                mPager.setCurrentItem(mPager.getCurrentItem() - 1);
                 return true;
             case android.R.id.home:
                 if (primeType.equals(MainActivity.LEARN_NEW)) {

@@ -17,4 +17,10 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
+
+    <style name="ButtonStyle" parent="Widget.AppCompat.Button.Colored">
+        <item name="android:minHeight">30dip</item>
+        <item name="android:minWidth">88dip</item>
+        <item name="android:textColor">@color/button_colors</item>
+    </style>
 </resources>
