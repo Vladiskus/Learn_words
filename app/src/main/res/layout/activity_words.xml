@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.first.learnenglishwordssmart.activities.WordsActivity">
+    tools:context="com.learn.english.smart.activities.WordsActivity">
 
     <RelativeLayout
         android:id="@+id/relative_layout"
@@ -17,7 +17,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="com.example.first.learnenglishwordssmart.activities.WordsActivity">
+        tools:context="com.learn.english.smart.activities.WordsActivity">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/my_toolbar"

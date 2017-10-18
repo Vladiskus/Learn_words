@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.example.first.learnenglishwordssmart.activities.SelectionActivity">
+    tools:context="com.learn.english.smart.activities.SelectionActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/my_toolbar"

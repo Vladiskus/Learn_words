@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.first.learnenglishwordssmart">
+    package="com.learn.english.smart">
 
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -12,12 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <receiver
-            android:name=".receivers.NotificationsReceiver"
+            android:name="com.learn.english.smart.receivers.NotificationsReceiver"
             android:enabled="true"
             android:exported="false" />
 
         <activity
-            android:name=".activities.MainActivity"
+            android:name="com.learn.english.smart.activities.MainActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop">
             <intent-filter>
@@ -26,25 +26,25 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.SelectionActivity"
+            android:name="com.learn.english.smart.activities.SelectionActivity"
             android:screenOrientation="portrait"
-            android:parentActivityName=".activities.MainActivity" />
+            android:parentActivityName="com.learn.english.smart.activities.MainActivity" />
         <activity
-            android:name=".activities.CardsActivity"
+            android:name="com.learn.english.smart.activities.CardsActivity"
             android:screenOrientation="portrait"
-            android:parentActivityName=".activities.MainActivity" />
+            android:parentActivityName="com.learn.english.smart.activities.MainActivity" />
         <activity
-            android:name=".activities.WordsActivity"
+            android:name="com.learn.english.smart.activities.WordsActivity"
             android:screenOrientation="portrait"
-            android:parentActivityName=".activities.MainActivity" />
+            android:parentActivityName="com.learn.english.smart.activities.MainActivity" />
 
         <service
-            android:name=".services.DownloadDBService"
+            android:name="com.learn.english.smart.services.DownloadDBService"
             android:exported="false" />
 
         <provider
-            android:name=".providers.WordsProvider"
-            android:authorities="com.example.first.learnenglishwordssmart.words.provider"
+            android:name="com.learn.english.smart.providers.WordsProvider"
+            android:authorities="com.learn.english.smart.provider"
             android:enabled="true"
             android:exported="true" />
     </application>

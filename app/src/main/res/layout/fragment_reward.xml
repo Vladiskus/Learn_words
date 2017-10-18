@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    tools:context="com.example.first.learnenglishwordssmart.fragments.RewardFragment">
+    tools:context="com.learn.english.smart.fragments.RewardFragment">
 
     <ImageView
         android:id="@+id/imageView"

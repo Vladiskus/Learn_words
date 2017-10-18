@@ -33,7 +33,7 @@
                 android:progress="0"
                 android:progressDrawable="@drawable/custom_progress_bar" />
 
-            <com.example.first.learnenglishwordssmart.classes.CustomViewPager
+            <com.learn.english.smart.classes.CustomViewPager
                 android:id="@+id/pager"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
