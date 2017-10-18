@@ -213,15 +213,13 @@ public class WordsActivity extends AppCompatActivity {
                 activity.requiredRatio = 1 - (double) MainActivity
                         .getPreference(activity, R.string.number_of_words, 10) / 50;
                 activity.words = WordsHelper.getWordsSpelling(activity, (activity.primeType
-                        .equals(MainActivity.GAME)) ? null : String.valueOf((int) (2 * 10 * MainActivity
+                        .equals(MainActivity.GAME)) ? null : String.valueOf((int) (4 * 10 * MainActivity
                         .getPreference(activity, R.string.number_of_words, 10) / (1 - activity.requiredRatio))), null);
                 if (activity.oldVocabulary > 12500)
                     PreferenceManager.getDefaultSharedPreferences(activity).edit()
                             .putInt(activity.getString(R.string.vocabulary),
-                                    activity.count - (int) (activity.length * (1 -
-                                            activity.realRatio)) * activity.multiplier +
-                                            MainActivity.getPreference(activity, R.string.last_rank,
-                                                    12522) - activity.words.size() - MainActivity
+                                    MainActivity.getPreference(activity, R.string.current_position,
+                                            1) - MainActivity
                                             .getPreference(activity, R.string.on_learning, 0)).apply();
             }
             return null;
@@ -353,11 +351,11 @@ public class WordsActivity extends AppCompatActivity {
             WordsActivity activity = weakActivity.get();
             if (activity != null) {
                 int rank;
-                WordsHelper.setAreKnown(activity, activity.knownWords);
                 if (activity.primeType.equals(MainActivity.GAME)) {
                     activity.vocabulary = activity.count - (int) (activity.length * (1 - activity.realRatio))
-                            * activity.multiplier + MainActivity.getPreference(activity,
-                            R.string.last_rank, 12522) - activity.words.size();
+                            * activity.multiplier + MainActivity
+                            .getPreference(activity, R.string.current_position, 1) - MainActivity
+                            .getPreference(activity, R.string.on_learning, 0);
                     PreferenceManager.getDefaultSharedPreferences(activity)
                             .edit().putInt(activity.getString(R.string.vocabulary), activity.vocabulary).apply();
                     if (activity.oldVocabulary != 0) return null;
@@ -365,8 +363,10 @@ public class WordsActivity extends AppCompatActivity {
                             activity.primeRanks.get(activity.primeRanks.size() - 1)) / 2;
                     else rank = 1;
                     WordsHelper.setAreKnown(activity, rank);
-                } else rank = MainActivity.getPreference(activity, R.string.current_position, 1) +
-                        activity.count;
+                } else {
+                    rank = MainActivity.getPreference(activity, R.string.current_position, 1) + activity.count;
+                    WordsHelper.setAreKnown(activity, activity.knownWords);
+                }
                 PreferenceManager.getDefaultSharedPreferences(activity).edit()
                         .putInt(activity.getString(R.string.current_position), rank).apply();
             }
