@@ -38,6 +38,7 @@ public class SelectionActivity extends AppCompatActivity {
     private String primeType;
     private ArrayList<Word> words;
     public ArrayList<String> wordsSpelling = new ArrayList<>();
+    public ArrayList<String> spellingArray;
     private int number;
     private static boolean isReversed = false;
 
@@ -50,6 +51,7 @@ public class SelectionActivity extends AppCompatActivity {
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle(R.string.selection);
+        spellingArray = WordsHelper.getWordsSpelling(this, null, wordsSpelling);
         if (soundHelper == null) soundHelper = new SoundHelper(this);
         number = MainActivity.getPreference(this, R.string.number_of_words, 10);
         primeType = getIntent().getExtras().getString(MainActivity.EXTRA_PRIME_TYPE);

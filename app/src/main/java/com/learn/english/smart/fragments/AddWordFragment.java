@@ -27,10 +27,9 @@ public class AddWordFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_add_word, container, false);
         final AutoCompleteTextView engView = (AutoCompleteTextView) rootView.findViewById(R.id.engWord);
         final TextView rusView = (TextView) rootView.findViewById(R.id.rusWord);
-        final ArrayList<String> spellingArray = WordsHelper.getWordsSpelling(getActivity(), null,
-                ((SelectionActivity) getActivity()).wordsSpelling);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(),
-                R.layout.support_simple_spinner_dropdown_item, spellingArray);
+                R.layout.support_simple_spinner_dropdown_item,
+                ((SelectionActivity) getActivity()).spellingArray);
         engView.setAdapter(adapter);
         engView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -50,7 +49,7 @@ public class AddWordFragment extends Fragment {
             public void onClick(View v) {
                 if (engView.getText().toString().length() != 0 && rusView.getText().toString().length() != 0) {
                     WordsHelper.addUserWord(getActivity(), engView.getText().toString().trim(),
-                            rusView.getText().toString().trim(), spellingArray
+                            rusView.getText().toString().trim(), ((SelectionActivity) getActivity()).spellingArray
                                     .contains(engView.getText().toString().trim()));
                     ViewGroup container = (ViewGroup) getActivity().findViewById(R.id.container);
                     container.removeViewAt(0);
