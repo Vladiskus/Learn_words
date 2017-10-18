@@ -53,9 +53,7 @@ public class AddWordFragment extends Fragment {
                                     .contains(engView.getText().toString().trim()));
                     ViewGroup container = (ViewGroup) getActivity().findViewById(R.id.container);
                     container.removeViewAt(0);
-                    int lastPosition = container.getChildCount() - 1;
-                    ((SelectionActivity) getActivity()).addWord(engView.getText().toString(),
-                            rusView.getText().toString(), lastPosition);
+                    new SelectionActivity.RefreshTask((SelectionActivity) getActivity(), false).execute();
                 }
                 cancel();
             }

@@ -147,25 +147,27 @@ public class SelectionActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 container.removeView(convertView);
-                new RefreshTask(SelectionActivity.this).execute(spelling);
+                new RefreshTask(SelectionActivity.this, true).execute(spelling);
             }
         });
         container.addView(convertView, position);
     }
 
-    private static class RefreshTask extends AsyncTask<String, Void, Void> {
+    public static class RefreshTask extends AsyncTask<String, Void, Void> {
         WeakReference<SelectionActivity> weakActivity;
         int last;
+        boolean isRemove;
 
-        RefreshTask(SelectionActivity activity) {
+        public RefreshTask(SelectionActivity activity, boolean isRemove) {
             weakActivity = new WeakReference<>(activity);
+            this.isRemove = isRemove;
         }
 
         @Override
         protected Void doInBackground(String... spellings) {
             SelectionActivity activity = weakActivity.get();
             if (activity != null) {
-                WordsHelper.setIsKnown(activity, spellings[0]);
+                if (isRemove) WordsHelper.setIsKnown(activity, spellings[0]);
                 activity.words = WordsHelper.getWords(activity, activity.primeType, null);
                 last = activity.words.size() - 1;
             }
@@ -175,8 +177,12 @@ public class SelectionActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void voids) {
             SelectionActivity activity = weakActivity.get();
-            if (activity != null) activity.addWord(activity.words.get(last).getSpelling(),
-                    activity.words.get(last).getTranslation(), 0);
+            if (activity != null) {
+                if (isRemove) activity.addWord(activity.words.get(last).getSpelling(),
+                        activity.words.get(last).getTranslation(), 0);
+                else activity.addWord(activity.words.get(0).getSpelling(),
+                        activity.words.get(0).getTranslation(), last);
+            }
         }
     }
 
